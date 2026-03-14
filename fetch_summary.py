@@ -42,8 +42,9 @@ def get_channel_id(youtube):
 
 def get_transcript(video_id):
     try:
-        transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=["en"])
-        full_text = " ".join([entry["text"] for entry in transcript_list])
+        ytt_api = YouTubeTranscriptApi()
+        fetched = ytt_api.fetch(video_id, languages=["en"])
+        full_text = " ".join([entry.text for entry in fetched])
         return full_text
     except Exception as e:
         raise Exception(f"Transcript nicht verfügbar: {e}")
