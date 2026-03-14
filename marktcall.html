@@ -4,51 +4,158 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MRKT Call — 12. March 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #0a0e1a; color: #e2e8f0; font-family: 'Georgia', serif; min-height: 100vh; }
-        header { background: #0d1117; border-bottom: 1px solid #1e2d40; padding: 1.5rem 0; }
-        .header-inner { max-width: 860px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; }
-        .brand { font-family: sans-serif; font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: #4a9eff; }
-        .back-link { font-size: 0.8rem; color: #4a6080; text-decoration: none; }
-        .back-link:hover { color: #4a9eff; }
-        main { max-width: 860px; margin: 0 auto; padding: 3rem 2rem 5rem; }
-        .meta { font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: #4a6080; margin-bottom: 0.75rem; font-family: sans-serif; }
-        h1 { font-size: 2rem; font-weight: normal; line-height: 1.3; color: #f0f4f8; margin-bottom: 1rem; }
-        .video-link { display: inline-block; font-size: 0.75rem; font-family: sans-serif; color: #4a9eff; text-decoration: none; border: 1px solid #1e3a5f; padding: 0.4rem 0.9rem; border-radius: 3px; margin-bottom: 2.5rem; }
-        .video-link:hover { background: #1e3a5f; }
-        hr { border: none; border-top: 1px solid #1e2d40; margin-bottom: 2.5rem; }
-        .summary h2 { font-size: 0.7rem; font-family: sans-serif; letter-spacing: 0.18em; text-transform: uppercase; color: #4a9eff; font-weight: normal; margin: 2rem 0 0.75rem; }
-        .summary p { font-size: 1rem; line-height: 1.85; color: #c8d4e0; margin-bottom: 0.5rem; }
-        footer { max-width: 860px; margin: 0 auto; padding: 1.5rem 2rem; border-top: 1px solid #1e2d40; font-size: 0.7rem; font-family: sans-serif; color: #2a3a4a; }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --ink: #181818;
+            --muted: #999;
+            --faint: #ccc;
+            --accent: #b8966e;
+            --bg: #f9f8f6;
+            --line: #e9e5e0;
+        }
+
+        body {
+            font-family: 'Jost', sans-serif;
+            font-weight: 300;
+            background: var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+        }
+
+        header {
+            padding: 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .back-link {
+            font-size: 0.72rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #888;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--accent); }
+
+        .brand {
+            font-size: 0.72rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #aaa;
+        }
+
+        main {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 4rem 2rem 6rem;
+        }
+
+        .meta {
+            font-size: 0.72rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #888;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            font-weight: 300;
+            line-height: 1.2;
+            color: var(--ink);
+            margin-bottom: 0.75rem;
+        }
+
+        .divider {
+            width: 28px;
+            height: 1px;
+            background: var(--accent);
+            margin: 2rem 0;
+        }
+
+        .video-link {
+            display: inline-block;
+            font-size: 0.72rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid var(--accent);
+            padding-bottom: 0.1rem;
+            margin-bottom: 3rem;
+            transition: opacity 0.2s;
+        }
+        .video-link:hover { opacity: 0.6; }
+
+        .section-label {
+            font-size: 0.72rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #888;
+            margin: 2.5rem 0 0.75rem;
+            border-top: 1px solid var(--line);
+            padding-top: 1.5rem;
+        }
+        .section-label:first-child { border-top: none; padding-top: 0; }
+
+        .summary p {
+            font-size: 0.95rem;
+            line-height: 1.85;
+            color: #444;
+            margin-bottom: 0.6rem;
+        }
+
+        .summary strong {
+            font-weight: 400;
+            color: var(--ink);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2.5rem;
+            border-top: 1px solid var(--line);
+            font-size: 0.72rem;
+            letter-spacing: 0.12em;
+            color: #bbb;
+        }
     </style>
 </head>
 <body>
     <header>
-        <div class="header-inner">
-            <span class="brand">MRKT Call · Risk Reversal Media</span>
-            <a href="/" class="back-link">← raab.koeln</a>
-        </div>
+        <a href="/" class="back-link">← raab.koeln</a>
+        <span class="brand">MRKT Call</span>
     </header>
+
     <main>
         <div class="meta">12. March 2026</div>
         <h1>The Market Is Pricing In A Best Case Scenario</h1>
         <a href="https://www.youtube.com/watch?v=qnYS5r7-Ufs" target="_blank" class="video-link">▶ Video ansehen</a>
-        <hr>
-        <div class="summary"><h2>Zusammenfassung der MRKT Call Episode vom 12. März</h2>
-<h2>Überblick</h2>
-<p>Das zentrale Thema dieser MRKT Call Episode dreht sich um die These, dass der Markt derzeit ein Best-Case-Szenario eingepreist hat. Die Hosts Dan Nathan, Guy Adami und Liz Thomas analysieren die aktuellen Marktbewegungen und diskutieren, ob die derzeitige Bewertung der Märkte realistisch ist oder möglicherweise zu optimistisch ausfällt. Die Episode fokussiert sich auf die Frage, ob Investoren zu euphorisch sind und welche Risiken sich daraus ergeben könnten.</p>
-<h2>Marktlage & Sentiment</h2>
-<p>Die Hosts beurteilen das aktuelle Marktsentiment als übermäßig optimistisch und warnen vor einer möglichen Überbewertung. Ihrer Einschätzung nach haben die Märkte bereits die bestmöglichen Entwicklungen in verschiedenen Bereichen eingepreist, was wenig Spielraum für weitere positive Überraschungen lässt. Diese Konstellation birgt erhebliche Downside-Risiken, sollten die hohen Erwartungen nicht erfüllt werden. Das Sentiment-Level wird als potenziell gefährlich für Investoren eingestuft, die derzeit long positioniert sind.</p>
-<h2>Hauptthemen</h2>
-<p>Die Episode behandelt schwerpunktmäßig die Diskrepanz zwischen aktuellen Marktbewertungen und fundamentalen Realitäten. Ein wesentlicher Diskussionspunkt ist die Frage nach der Nachhaltigkeit der derzeitigen Rally und ob die Märkte eine Korrektur benötigen, um wieder auf ein realistischeres Bewertungsniveau zurückzukehren. Die Hosts erörtern makroökonomische Faktoren und deren potenzielle Auswirkungen auf verschiedene Assetklassen.</p>
-<h2>Aktien & Assets</h2>
-<p>Während spezifische Einzelwerte nicht aus der Beschreibung hervorgehen, liegt der Fokus auf breit gefächerten Marktindizes wie dem S&P 500 und NASDAQ 100. Die technische Analyse dieser Hauptindizes steht im Mittelpunkt der Diskussion. Zusätzlich werden Commodities und Treasuries als relevante Assetklassen für das aktuelle Marktumfeld betrachtet und analysiert.</p>
-<h2>Trade Ideas & Empfehlungen</h2>
-<p>Basierend auf der Grundthese, dass der Markt ein Best-Case-Szenario eingepreist hat, dürften die Trade Ideas defensiver Natur sein. Die Hosts präsentieren wahrscheinlich Strategien, die auf eine mögliche Marktkorrektur vorbereitet sind oder von erhöhter Volatilität profitieren können. Konkrete Handelsempfehlungen zielen vermutlich darauf ab, Portfolios gegen Downside-Risiken abzusichern oder antizyklische Positionen aufzubauen.</p>
-<h2>Ausblick</h2>
-<p>Für die kommenden Handelstage erwarten die Hosts eine erhöhte Marktvolatilität und mögliche Korrekturbewegungen. Die Warnung vor der aktuellen Best-Case-Einpreising deutet darauf hin, dass sie kurzfristig eher bearish gestimmt sind und Investoren zur Vorsicht mahnen. Der Ausblick konzentriert sich auf die Notwendigkeit, Portfolios entsprechend zu positionieren und auf potenzielle Marktturbulenzen vorbereitet zu sein, sollten die optimistischen Erwartungen nicht eintreten.</p></div>
+        <div class="divider"></div>
+        <div class="summary">
+            <div class="section-label">Überblick</div>
+<p>In dieser Episode von MRKT Call vom 12. März diskutieren die Hosts Dan Nathan, Guy Adami und Liz Thomas die These, dass der Markt aktuell ein Best-Case-Szenario einpreist. Die Analyse konzentriert sich darauf, ob die derzeitigen Marktbewertungen realistisch sind oder möglicherweise zu optimistische Erwartungen widerspiegeln. Die Episode behandelt die wichtigsten marktbewegenden Schlagzeilen des Tages und bietet konkrete Handelsideen für Investoren.</p>
+<div class="section-label">Marktlage & Sentiment</div>
+<p>Die Hosts bewerten das aktuelle Marktsentiment als übermäßig optimistisch und warnen vor einer möglichen Überbewertung verschiedener Marktsegmente. Sie argumentieren, dass die aktuellen Kursniveaus bereits perfekte Bedingungen voraussetzen und wenig Raum für Enttäuschungen lassen. Das Team betont, dass Investoren vorsichtig sein sollten, da der Markt möglicherweise zu euphorisch auf positive Entwicklungen reagiert hat, ohne ausreichend Risikofaktoren zu berücksichtigen.</p>
+<div class="section-label">Hauptthemen</div>
+<p>Die Episode fokussiert sich auf die Diskrepanz zwischen Markterwartungen und realwirtschaftlichen Fundamentaldaten. Ein zentraler Diskussionspunkt ist die Frage, ob die derzeitige Bewertung nachhaltiger Wachstumstrends oder lediglich spekulativer Übertreibungen entspricht. Die Hosts analysieren verschiedene Wirtschaftsindikatoren und deren Einfluss auf die Marktdynamik, während sie gleichzeitig potenzielle Risikofaktoren identifizieren, die von der Mehrheit der Marktteilnehmer möglicherweise unterschätzt werden.</p>
+<div class="section-label">Aktien & Assets</div>
+<p>Obwohl die Beschreibung keine spezifischen Einzelwerte nennt, liegt der Fokus traditionell auf den wichtigsten Marktindizes wie dem S&P 500 und NASDAQ 100. Die technische Analyse umfasst voraussichtlich Bewertungen führender Technologieaktien und anderer Wachstumstitel, die besonders anfällig für Bewertungskorrekturen sein könnten. Zusätzlich werden wahrscheinlich Rohstoffe und Staatsanleihen als alternative Anlageklassen in die Diskussion einbezogen.</p>
+<div class="section-label">Trade Ideas & Empfehlungen</div>
+<p>Die Handelsempfehlungen konzentrieren sich vermutlich auf defensive Strategien und Absicherungsmaßnahmen, given die skeptische Einschätzung der aktuellen Marktlage. Die Hosts präsentieren wahrscheinlich sowohl Long- als auch Short-Positionen, wobei der Schwerpunkt auf Risk-Management-Strategien liegt. Konkrete Derivate-Strategien und Options-Trades werden voraussichtlich vorgestellt, um von möglichen Marktvolatilitäten zu profitieren oder bestehende Positionen abzusichern.</p>
+<div class="section-label">Ausblick</div>
+<p>Für die kommenden Handelstage erwarten die Hosts eine erhöhte Volatilität und potenzielle Marktkorrekturen, sollten die optimistischen Erwartungen nicht erfüllt werden. Sie betonen die Wichtigkeit, auf verschiedene Szenarien vorbereitet zu sein und warnen vor der Gefahr, dass bereits kleine negative Überraschungen zu überproportionalen Marktreaktionen führen könnten. Das Team rät Investoren, ihre Portfolios kritisch zu überprüfen und gegebenenfalls Risikopositionen zu reduzieren.</p>
+        </div>
     </main>
-    <footer>KI-generierte Zusammenfassung · 14.03.2026 11:00 · raab.koeln</footer>
+
+    <footer>
+        KI-generierte Zusammenfassung &nbsp;·&nbsp; 14.03.2026 &nbsp;·&nbsp; raab.koeln
+    </footer>
 </body>
 </html>
