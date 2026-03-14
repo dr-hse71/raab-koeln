@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>US Treasury Yield Curve 1990–2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: #d0d0d0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    overflow: hidden;
+  }
+
+  /* Outer wrapper scales to fit any screen */
+  #scaler {
+    /* JS will set transform: scale() here */
+    transform-origin: top left;
+    width: 1280px; height: 950px;
+    position: relative;
+  }
+
+  .stage {
+    width: 1280px; height: 950px;
+    position: relative; background: #fff;
+    border: 1px solid rgba(0,0,0,0.06); overflow: hidden;
+  }
+
+  #bg-canvas {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+    background-size: 80px 60px;
+    z-index: 1; pointer-events: none;
+  }
+
+  /* ── Header ── */
+  .header { position: absolute; top: 22px; left: 90px; z-index: 10; }
+  .header-title { font-family:'Instrument Serif',serif; font-size:20px; color:rgba(0,0,0,0.72); }
+  .header-sub   { font-family:'DM Mono',monospace; font-size:10px; color:rgba(0,0,0,0.32); letter-spacing:.15em; text-transform:uppercase; margin-top:3px; }
+
+  /* ── Regime badge ── */
+  #regime-badge { position:absolute; top:22px; right:50px; z-index:10; display:flex; align-items:center; gap:8px; }
+  .regime-dot   { width:8px; height:8px; border-radius:50%; background:#aaa; flex-shrink:0; }
+  .regime-text  { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:rgba(0,0,0,0.45); }
+
+  /* ── Top chart ── */
+  #top-chart-wrap {
+    position: absolute; top: 64px; left: 90px; right: 50px; height: 355px; z-index: 3;
+  }
+  svg#top-chart { width:100%; height:100%; overflow:visible; }
+
+  /* Big centred regime label */
+  #center-label {
+    position:absolute; top:64px; left:90px; right:50px; height:355px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    z-index:2; pointer-events:none; user-select:none; text-align:center; white-space:nowrap;
+  }
+  #center-regime { font-family:'Instrument Serif',serif; font-style:italic; font-size:64px; line-height:1; letter-spacing:-.01em; color:rgba(0,0,0,0.07); }
+  #center-sub    { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:rgba(0,0,0,0.13); margin-top:8px; }
+
+  /* ── Divider ── */
+  .divider       { position:absolute; left:90px; right:50px; top:445px; height:1px; background:rgba(0,0,0,0.08); z-index:5; }
+  .divider-label { position:absolute; left:90px; top:452px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:rgba(0,0,0,0.3); z-index:10; }
+
+  /* ── Bottom chart ── */
+  #bot-chart-wrap {
+    position: absolute; top: 472px; left: 90px; right: 50px; height: 290px; z-index: 3;
+  }
+  svg#bot-chart { width:100%; height:100%; overflow:visible; }
+
+  /* ── SVG common ── */
+  .axis-line { stroke:rgba(0,0,0,0.15); stroke-width:1; }
+  .tick-line { stroke:rgba(0,0,0,0.06); stroke-width:1; stroke-dasharray:4 6; }
+  .axis-label{ fill:rgba(0,0,0,0.36); font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.05em; }
+  .axis-title{ fill:rgba(0,0,0,0.4);  font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; }
+
+  #yield-curve { fill:none; stroke:#111; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; }
+  #yield-area  { opacity:.05; fill:#111; }
+  .curve-dot   { fill:#111; opacity:.7; }
+  #spread-line { fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+  #spread-area { opacity:.10; }
+
+  /* ── Info bar ── */
+  #bottom-bar {
+    position: absolute; bottom: 62px; left: 90px; right: 50px;
+    display: flex; justify-content: space-between; align-items: flex-end;
+    z-index: 10;
+  }
+  .watermark { font-family:'DM Mono',monospace; font-size:10px; color:rgba(0,0,0,0.16); letter-spacing:.1em; text-transform:uppercase; }
+  #spread-readout { text-align:right; }
+  #spread-readout-label { font-family:'DM Mono',monospace; font-size:10px; color:rgba(0,0,0,0.3); letter-spacing:.12em; text-transform:uppercase; }
+  #spread-readout-value { font-family:'DM Mono',monospace; font-size:20px; font-weight:500; letter-spacing:-.02em; color:#111; margin-top:2px; }
+
+  /* ── Video controls ── */
+  #controls {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 56px;
+    background: rgba(255,255,255,0.95);
+    border-top: 1px solid rgba(0,0,0,0.07);
+    display: flex; align-items: center; gap: 14px;
+    padding: 0 24px; z-index: 30;
+    user-select: none;
+  }
+
+  #play-btn {
+    width: 34px; height: 34px; flex-shrink:0;
+    border:none; background:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    color:rgba(0,0,0,0.65); padding:0; transition:color .15s;
+  }
+  #play-btn:hover { color:#000; }
+  #play-btn svg { width:20px; height:20px; }
+
+  #restart-btn {
+    width:30px; height:30px; flex-shrink:0;
+    border:none; background:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    color:rgba(0,0,0,0.38); padding:0; transition:color .15s;
+  }
+  #restart-btn:hover { color:rgba(0,0,0,0.7); }
+  #restart-btn svg { width:16px; height:16px; }
+
+  #time-label {
+    font-family:'DM Mono',monospace; font-size:11px;
+    color:rgba(0,0,0,0.4); letter-spacing:.05em;
+    white-space:nowrap; flex-shrink:0; min-width:84px;
+  }
+
+  /* Scrubber */
+  #scrubber-wrap {
+    flex:1; height:28px;
+    display:flex; align-items:center;
+    cursor:pointer; position:relative; touch-action:none;
+  }
+  #scrubber-track {
+    width:100%; height:5px;
+    background:rgba(0,0,0,0.1);
+    border-radius:3px; position:relative;
+  }
+  #scrubber-fill {
+    height:100%; width:0%; position:relative;
+    background:rgba(0,0,0,0.5);
+    border-radius:3px;
+  }
+  #scrubber-thumb {
+    position:absolute; top:50%; right:-7px;
+    width:14px; height:14px;
+    background:#111; border-radius:50%;
+    transform:translateY(-50%);
+    box-shadow:0 1px 4px rgba(0,0,0,0.25);
+    transition:transform .1s;
+    pointer-events:none;
+  }
+  #scrubber-wrap:hover #scrubber-thumb,
+  #scrubber-wrap.dragging #scrubber-thumb { transform:translateY(-50%) scale(1.35); }
+</style>
+</head>
+<body>
+<div id="scaler">
+<div class="stage" id="stage">
+  <canvas id="bg-canvas"></canvas>
+  <div class="grid"></div>
+
+  <div class="header">
+    <div class="header-title">US Treasury Yield Curve</div>
+    <div class="header-sub">Maturity Structure · 2s10s Spread · 1990 – 2026</div>
+  </div>
+
+  <div id="regime-badge">
+    <div class="regime-dot" id="regime-dot"></div>
+    <div class="regime-text" id="regime-text">—</div>
+  </div>
+
+  <div id="center-label">
+    <div id="center-regime">—</div>
+    <div id="center-sub">2s10s Spread</div>
+  </div>
+
+  <div id="top-chart-wrap">
+    <svg id="top-chart" viewBox="0 0 1100 355" preserveAspectRatio="none">
+      <g id="yg-top"></g>
+      <g id="xt-top"></g>
+      <line class="axis-line" x1="0" y1="355" x2="1100" y2="355"/>
+      <line class="axis-line" x1="0" y1="0"   x2="0"    y2="355"/>
+      <text class="axis-title" x="550" y="355" text-anchor="middle" dy="36">Maturity</text>
+      <text class="axis-title" x="-175" y="-46" text-anchor="middle" transform="rotate(-90)">Yield (%)</text>
+      <path id="yield-area"/>
+      <path id="yield-curve"/>
+      <g id="dots"></g>
+    </svg>
+  </div>
+
+  <div class="divider"></div>
+  <div class="divider-label">10Y – 2Y SPREAD (BPS)</div>
+
+  <div id="bot-chart-wrap">
+    <svg id="bot-chart" viewBox="0 0 1100 255" preserveAspectRatio="none">
+      <g id="yg-bot"></g>
+      <g id="xt-bot"></g>
+      <line id="zero-line" class="axis-line" x1="0" x2="1100" y1="0" y2="0"
+            style="stroke:rgba(0,0,0,0.25);stroke-dasharray:6 4;"/>
+      <line class="axis-line" x1="0" y1="0" x2="0" y2="255"/>
+      <text class="axis-title" x="550" y="255" text-anchor="middle" dy="34">Year</text>
+      <text class="axis-title" x="-125" y="-46" text-anchor="middle" transform="rotate(-90)">bps</text>
+      <path id="spread-area"/>
+      <path id="spread-line"/>
+      <circle id="spread-dot" r="5" fill="#111"/>
+    </svg>
+  </div>
+
+  <div id="bottom-bar">
+    <div class="watermark">US TREASURY · INDICATIVE DATA</div>
+    <div id="spread-readout">
+      <div id="spread-readout-label">10Y – 2Y Spread</div>
+      <div id="spread-readout-value">—</div>
+    </div>
+  </div>
+
+  <!-- Video controls -->
+  <div id="controls">
+    <button id="play-btn" title="Play / Pause">
+      <svg id="icon-pause" viewBox="0 0 24 24" fill="currentColor">
+        <rect x="5" y="4" width="4" height="16" rx="1"/>
+        <rect x="15" y="4" width="4" height="16" rx="1"/>
+      </svg>
+      <svg id="icon-play" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+        <polygon points="5,3 19,12 5,21"/>
+      </svg>
+    </button>
+    <button id="restart-btn" title="Restart">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="1 4 1 10 7 10"/>
+        <path d="M3.51 15a9 9 0 1 0 .49-4.5"/>
+      </svg>
+    </button>
+    <div id="time-label">0:00 / 0:25</div>
+    <div id="scrubber-wrap">
+      <div id="scrubber-track">
+        <div id="scrubber-fill">
+          <div id="scrubber-thumb"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- .stage -->
+</div><!-- #scaler -->
+
+<script>
+// ═══════════════════════════════════════════════
+// RESPONSIVE SCALING
+// ═══════════════════════════════════════════════
+const DESIGN_W = 1280, DESIGN_H = 950;
+function scaleToFit() {
+  const scaler = document.getElementById('scaler');
+  const scaleX = window.innerWidth  / DESIGN_W;
+  const scaleY = window.innerHeight / DESIGN_H;
+  const scale  = Math.min(scaleX, scaleY);
+  scaler.style.transform = `scale(${scale})`;
+  scaler.style.marginLeft = ((window.innerWidth  - DESIGN_W * scale) / 2) + 'px';
+  scaler.style.marginTop  = ((window.innerHeight - DESIGN_H * scale) / 2) + 'px';
+}
+scaleToFit();
+window.addEventListener('resize', scaleToFit);
+
+// ═══════════════════════════════════════════════
+// CHART GEOMETRY — Top
+// ═══════════════════════════════════════════════
+const TW = 1100, TH = 355;
+const MATURITIES  = [0.25, 0.5, 1, 2, 3, 5, 7, 10, 20, 30];
+const MAT_LABELS  = ['3M','6M','1Y','2Y','3Y','5Y','7Y','10Y','20Y','30Y'];
+const Y_MIN = 0, Y_MAX = 10;
+
+function txScale(m) {
+  const lMin = Math.log(0.25), lMax = Math.log(30);
+  return (Math.log(m) - lMin) / (lMax - lMin) * TW;
+}
+function tyScale(y) { return TH - (y - Y_MIN) / (Y_MAX - Y_MIN) * TH; }
+
+// ═══════════════════════════════════════════════
+// CHART GEOMETRY — Bottom (spread)
+// ═══════════════════════════════════════════════
+const BW = 1100, BH = 255;
+const S_MIN = -250, S_MAX = 350;
+
+function bxScale(tn) { return tn * BW; }          // tn = normalised 0..1
+function byScale(s)  { return BH - (s - S_MIN) / (S_MAX - S_MIN) * BH; }
+
+// ═══════════════════════════════════════════════
+// KEYFRAMES
+// ═══════════════════════════════════════════════
+const KEYFRAMES = [
+  {t:0.000,label:'1990',q:'Q1',yields:[7.80,7.90,7.95,8.00,8.05,8.10,8.15,8.22,8.40,8.45]},
+  {t:0.028,label:'1990',q:'Q2',yields:[7.85,7.95,8.00,8.10,8.15,8.20,8.25,8.32,8.50,8.55]},
+  {t:0.056,label:'1990',q:'Q3',yields:[7.50,7.65,7.70,7.80,7.90,8.00,8.10,8.20,8.35,8.40]},
+  {t:0.083,label:'1990',q:'Q4',yields:[7.00,7.10,7.20,7.30,7.35,7.55,7.65,7.85,8.10,8.20]},
+  {t:0.111,label:'1991',q:'Q1',yields:[6.10,6.20,6.40,6.60,6.90,7.25,7.55,7.86,8.10,8.18]},
+  {t:0.139,label:'1991',q:'Q2',yields:[5.60,5.80,6.00,6.25,6.55,7.00,7.30,7.78,8.02,8.10]},
+  {t:0.167,label:'1991',q:'Q3',yields:[5.40,5.55,5.65,5.90,6.20,6.80,7.10,7.65,8.00,8.06]},
+  {t:0.194,label:'1991',q:'Q4',yields:[4.60,4.80,5.00,5.30,5.70,6.30,6.75,7.09,7.55,7.70]},
+  {t:0.222,label:'1992',q:'Q1',yields:[3.90,4.10,4.30,4.80,5.30,6.10,6.55,7.03,7.50,7.65]},
+  {t:0.250,label:'1992',q:'Q2',yields:[3.70,3.90,4.10,4.60,5.10,5.95,6.40,6.90,7.38,7.55]},
+  {t:0.278,label:'1992',q:'Q3',yields:[2.90,3.10,3.20,3.40,4.00,5.30,5.90,6.59,7.20,7.38]},
+  {t:0.306,label:'1992',q:'Q4',yields:[3.00,3.20,3.40,3.70,4.30,5.65,6.15,6.77,7.35,7.50]},
+  {t:0.333,label:'1993',q:'Q1',yields:[2.90,3.00,3.10,3.50,4.10,5.30,5.80,6.35,7.00,6.83]},
+  {t:0.361,label:'1993',q:'Q2',yields:[2.90,3.00,3.10,3.45,4.00,5.20,5.75,5.96,6.65,6.60]},
+  {t:0.389,label:'1993',q:'Q3',yields:[3.00,3.05,3.10,3.40,3.80,4.90,5.30,5.57,6.30,6.22]},
+  {t:0.417,label:'1993',q:'Q4',yields:[3.00,3.05,3.10,3.55,4.00,5.20,5.55,5.83,6.50,6.35]},
+  {t:0.444,label:'1994',q:'Q1',yields:[3.30,3.60,4.00,4.50,5.10,5.85,6.15,6.48,6.95,6.81]},
+  {t:0.472,label:'1994',q:'Q2',yields:[4.00,4.50,5.00,5.70,6.15,6.70,6.95,7.25,7.65,7.50]},
+  {t:0.500,label:'1994',q:'Q3',yields:[4.60,5.00,5.45,5.90,6.30,6.90,7.15,7.46,7.80,7.70]},
+  {t:0.528,label:'1994',q:'Q4',yields:[5.50,5.90,6.30,7.00,7.35,7.75,7.85,7.81,7.85,7.88]},
+  {t:0.556,label:'1995',q:'Q1',yields:[5.80,5.90,5.90,6.20,6.35,6.55,6.65,6.91,7.00,7.04]},
+  {t:0.583,label:'1995',q:'Q2',yields:[5.60,5.60,5.55,5.75,5.90,6.10,6.25,6.57,6.78,6.77]},
+  {t:0.611,label:'1995',q:'Q3',yields:[5.35,5.40,5.40,5.65,5.80,6.00,6.15,6.25,6.48,6.50]},
+  {t:0.639,label:'1995',q:'Q4',yields:[5.10,5.15,5.20,5.30,5.45,5.65,5.80,5.98,6.25,6.25]},
+  {t:0.667,label:'1996',q:'Q1',yields:[5.00,5.05,5.10,5.25,5.45,5.70,5.95,6.10,6.40,6.40]},
+  {t:0.694,label:'1996',q:'Q2',yields:[5.10,5.20,5.35,5.80,6.10,6.50,6.65,6.74,6.95,6.93]},
+  {t:0.722,label:'1996',q:'Q3',yields:[5.15,5.20,5.30,5.75,6.05,6.40,6.55,6.66,6.85,6.83]},
+  {t:0.750,label:'1996',q:'Q4',yields:[5.05,5.15,5.25,5.55,5.80,6.10,6.25,6.42,6.68,6.65]},
+  {t:0.778,label:'1997',q:'Q1',yields:[5.05,5.10,5.20,5.55,5.80,6.15,6.35,6.55,6.83,6.83]},
+  {t:0.806,label:'1997',q:'Q2',yields:[4.90,5.00,5.10,5.50,5.75,6.15,6.35,6.49,6.75,6.76]},
+  {t:0.833,label:'1997',q:'Q3',yields:[5.00,5.05,5.10,5.45,5.70,6.10,6.30,6.35,6.60,6.61]},
+  {t:0.861,label:'1997',q:'Q4',yields:[5.10,5.15,5.20,5.55,5.70,5.85,5.92,5.81,6.10,6.05]},
+  {t:0.889,label:'1998',q:'Q1',yields:[5.10,5.15,5.10,5.40,5.50,5.60,5.65,5.65,5.85,5.86]},
+  {t:0.917,label:'1998',q:'Q2',yields:[5.00,5.05,5.00,5.35,5.45,5.55,5.60,5.50,5.75,5.75]},
+  {t:0.944,label:'1998',q:'Q3',yields:[4.70,4.70,4.65,4.55,4.55,4.60,4.70,4.72,5.10,5.18]},
+  {t:0.972,label:'1998',q:'Q4',yields:[4.40,4.45,4.45,4.35,4.40,4.55,4.65,4.65,5.05,5.10]},
+  {t:1.000,label:'1999',q:'Q1',yields:[4.50,4.55,4.65,4.90,5.00,5.10,5.20,5.13,5.50,5.43]},
+  {t:1.028,label:'1999',q:'Q2',yields:[4.70,4.85,5.00,5.40,5.50,5.65,5.75,5.76,6.10,6.06]},
+  {t:1.056,label:'1999',q:'Q3',yields:[5.00,5.05,5.10,5.65,5.75,5.90,6.00,5.92,6.30,6.23]},
+  {t:1.083,label:'1999',q:'Q4',yields:[5.30,5.50,5.70,6.20,6.35,6.45,6.50,6.35,6.60,6.48]},
+  {t:1.111,label:'2000',q:'Q1',yields:[5.80,5.90,6.10,6.60,6.70,6.65,6.55,6.26,6.55,6.40]},
+  {t:1.139,label:'2000',q:'Q2',yields:[5.90,6.00,6.15,6.50,6.55,6.55,6.45,6.10,6.40,6.22]},
+  {t:1.167,label:'2000',q:'Q3',yields:[6.10,6.20,6.20,6.25,6.20,6.15,6.05,5.80,6.15,5.94]},
+  {t:1.194,label:'2000',q:'Q4',yields:[6.20,6.20,5.95,5.65,5.55,5.50,5.50,5.24,5.65,5.46]},
+  {t:1.222,label:'2001',q:'Q1',yields:[5.00,4.85,4.80,4.75,4.85,5.00,5.15,5.01,5.56,5.49]},
+  {t:1.250,label:'2001',q:'Q2',yields:[3.70,3.65,3.70,4.05,4.35,4.90,5.10,5.26,5.80,5.72]},
+  {t:1.278,label:'2001',q:'Q3',yields:[2.80,2.75,2.85,3.20,3.70,4.40,4.80,4.73,5.40,5.32]},
+  {t:1.306,label:'2001',q:'Q4',yields:[1.80,1.85,2.00,2.75,3.35,4.20,4.65,4.83,5.55,5.43]},
+  {t:1.333,label:'2002',q:'Q1',yields:[1.75,1.80,2.10,2.90,3.60,4.45,4.85,5.00,5.70,5.60]},
+  {t:1.361,label:'2002',q:'Q2',yields:[1.70,1.75,2.10,2.80,3.45,4.20,4.65,4.93,5.60,5.52]},
+  {t:1.389,label:'2002',q:'Q3',yields:[1.65,1.70,1.85,2.30,2.95,3.70,4.15,3.87,4.70,4.61]},
+  {t:1.417,label:'2002',q:'Q4',yields:[1.25,1.30,1.45,1.90,2.55,3.35,3.90,3.83,4.70,4.58]},
+  {t:1.444,label:'2003',q:'Q1',yields:[1.15,1.20,1.30,1.70,2.35,3.05,3.65,3.81,4.70,4.58]},
+  {t:1.472,label:'2003',q:'Q2',yields:[1.05,1.10,1.15,1.30,1.85,2.70,3.35,3.33,4.30,4.14]},
+  {t:1.500,label:'2003',q:'Q3',yields:[0.95,1.00,1.05,1.50,2.10,3.15,3.90,4.25,5.00,4.93]},
+  {t:1.528,label:'2003',q:'Q4',yields:[0.95,1.00,1.10,1.80,2.45,3.30,3.95,4.27,5.00,4.90]},
+  {t:1.556,label:'2004',q:'Q1',yields:[0.95,1.00,1.10,1.80,2.35,3.10,3.75,4.00,4.78,4.72]},
+  {t:1.583,label:'2004',q:'Q2',yields:[1.10,1.25,1.45,2.30,2.85,3.65,4.25,4.62,5.40,5.28]},
+  {t:1.611,label:'2004',q:'Q3',yields:[1.65,1.85,2.05,2.45,2.90,3.55,4.05,4.14,4.95,4.85]},
+  {t:1.639,label:'2004',q:'Q4',yields:[2.20,2.40,2.60,2.95,3.20,3.60,4.00,4.23,4.85,4.81]},
+  {t:1.667,label:'2005',q:'Q1',yields:[2.55,2.75,2.90,3.15,3.35,3.70,4.00,4.28,4.70,4.63]},
+  {t:1.694,label:'2005',q:'Q2',yields:[2.85,3.05,3.25,3.50,3.65,3.85,4.05,3.96,4.40,4.30]},
+  {t:1.722,label:'2005',q:'Q3',yields:[3.30,3.50,3.70,3.90,3.95,3.95,4.05,4.20,4.52,4.42]},
+  {t:1.750,label:'2005',q:'Q4',yields:[3.85,4.05,4.25,4.35,4.35,4.40,4.45,4.39,4.61,4.54]},
+  {t:1.778,label:'2006',q:'Q1',yields:[4.40,4.60,4.75,4.78,4.75,4.73,4.74,4.72,4.88,4.76]},
+  {t:1.806,label:'2006',q:'Q2',yields:[4.80,5.00,5.10,5.10,5.06,5.03,5.03,5.11,5.28,5.21]},
+  {t:1.833,label:'2006',q:'Q3',yields:[5.00,5.10,5.15,5.05,4.98,4.88,4.88,4.79,4.96,4.90]},
+  {t:1.861,label:'2006',q:'Q4',yields:[5.10,5.15,5.10,4.96,4.84,4.72,4.73,4.56,4.74,4.69]},
+  {t:1.889,label:'2007',q:'Q1',yields:[5.10,5.15,5.10,4.97,4.84,4.71,4.72,4.65,4.84,4.77]},
+  {t:1.917,label:'2007',q:'Q2',yields:[4.90,5.00,5.00,4.97,4.93,4.94,4.99,5.10,5.26,5.22]},
+  {t:1.944,label:'2007',q:'Q3',yields:[4.05,4.30,4.30,4.20,4.25,4.40,4.55,4.59,4.87,4.84]},
+  {t:1.972,label:'2007',q:'Q4',yields:[3.40,3.60,3.55,3.45,3.60,3.85,4.05,4.10,4.52,4.52]},
+  {t:2.000,label:'2008',q:'Q1',yields:[1.65,1.90,1.95,1.95,2.20,2.70,2.95,3.41,3.95,4.25]},
+  {t:2.028,label:'2008',q:'Q2',yields:[1.60,1.85,2.10,2.45,2.80,3.28,3.62,3.99,4.52,4.67]},
+  {t:2.056,label:'2008',q:'Q3',yields:[1.45,1.75,2.15,2.40,2.75,3.22,3.57,3.83,4.45,4.27]},
+  {t:2.083,label:'2008',q:'Q4',yields:[0.04,0.12,0.37,0.76,1.16,1.83,2.36,2.25,3.02,2.68]},
+  {t:2.111,label:'2009',q:'Q1',yields:[0.20,0.30,0.55,0.97,1.52,2.22,2.74,2.71,3.60,3.54]},
+  {t:2.139,label:'2009',q:'Q2',yields:[0.18,0.28,0.55,1.10,1.80,2.70,3.30,3.52,4.45,4.29]},
+  {t:2.167,label:'2009',q:'Q3',yields:[0.12,0.20,0.42,0.98,1.55,2.45,3.00,3.31,4.20,4.04]},
+  {t:2.194,label:'2009',q:'Q4',yields:[0.06,0.15,0.35,0.88,1.45,2.35,2.90,3.26,4.15,3.99]},
+  {t:2.222,label:'2010',q:'Q2',yields:[0.18,0.22,0.35,0.72,1.25,2.10,2.75,3.19,4.05,3.91]},
+  {t:2.278,label:'2010',q:'Q4',yields:[0.12,0.18,0.26,0.60,1.05,1.95,2.60,3.00,3.93,3.78]},
+  {t:2.333,label:'2011',q:'Q2',yields:[0.05,0.08,0.18,0.52,1.00,1.82,2.47,2.97,3.91,3.79]},
+  {t:2.389,label:'2011',q:'Q4',yields:[0.01,0.03,0.08,0.25,0.44,0.92,1.38,1.89,2.62,2.90]},
+  {t:2.444,label:'2012',q:'Q3',yields:[0.10,0.12,0.17,0.28,0.39,0.65,0.99,1.55,2.29,2.72]},
+  {t:2.500,label:'2013',q:'Q1',yields:[0.06,0.10,0.14,0.26,0.40,0.74,1.11,1.85,2.59,3.00]},
+  {t:2.556,label:'2013',q:'Q3',yields:[0.04,0.07,0.11,0.30,0.62,1.38,1.95,2.61,3.26,3.65]},
+  {t:2.611,label:'2013',q:'Q4',yields:[0.04,0.07,0.12,0.37,0.80,1.62,2.20,2.72,3.36,3.73]},
+  {t:2.667,label:'2014',q:'Q2',yields:[0.04,0.06,0.11,0.45,0.92,1.65,2.13,2.52,3.15,3.36]},
+  {t:2.722,label:'2015',q:'Q1',yields:[0.02,0.06,0.22,0.57,0.93,1.50,1.90,2.00,2.55,2.56]},
+  {t:2.778,label:'2015',q:'Q4',yields:[0.23,0.47,0.65,1.01,1.30,1.76,2.09,2.27,2.67,2.97]},
+  {t:2.833,label:'2016',q:'Q4',yields:[0.45,0.57,0.80,1.19,1.47,1.93,2.27,2.45,2.83,3.07]},
+  {t:2.889,label:'2017',q:'Q3',yields:[1.02,1.08,1.20,1.36,1.49,1.78,2.03,2.21,2.62,2.84]},
+  {t:2.944,label:'2018',q:'Q2',yields:[1.92,2.07,2.27,2.52,2.67,2.73,2.80,2.85,2.98,2.97]},
+  {t:2.972,label:'2018',q:'Q4',yields:[2.36,2.50,2.60,2.68,2.69,2.68,2.72,2.69,2.83,2.98]},
+  {t:3.000,label:'2019',q:'Q1',yields:[2.40,2.45,2.47,2.46,2.43,2.45,2.52,2.60,2.85,3.00]},
+  {t:3.056,label:'2019',q:'Q3',yields:[1.88,1.93,1.84,1.67,1.63,1.58,1.70,1.52,1.90,2.02]},
+  {t:3.083,label:'2019',q:'Q4',yields:[1.58,1.60,1.60,1.59,1.62,1.69,1.79,1.77,2.14,2.21]},
+  {t:3.111,label:'2020',q:'Q1',yields:[1.55,1.56,1.50,1.45,1.42,1.43,1.55,1.68,2.00,2.15]},
+  {t:3.139,label:'2020',q:'Q2',yields:[0.09,0.10,0.12,0.16,0.20,0.30,0.50,0.68,1.00,1.27]},
+  {t:3.167,label:'2020',q:'Q4',yields:[0.10,0.11,0.12,0.13,0.18,0.28,0.50,0.68,1.05,1.33]},
+  {t:3.194,label:'2021',q:'Q1',yields:[0.04,0.05,0.06,0.12,0.20,0.55,0.97,1.51,2.06,2.30]},
+  {t:3.222,label:'2021',q:'Q3',yields:[0.04,0.05,0.07,0.21,0.40,0.75,1.05,1.30,1.79,1.93]},
+  {t:3.250,label:'2022',q:'Q1',yields:[0.38,0.70,1.19,1.72,1.96,2.14,2.22,2.14,2.55,2.44]},
+  {t:3.278,label:'2022',q:'Q3',yields:[3.27,3.55,3.75,4.02,3.98,3.77,3.65,3.53,3.74,3.58]},
+  {t:3.306,label:'2023',q:'Q1',yields:[4.65,4.82,4.98,4.79,4.54,4.15,3.95,3.78,3.97,3.80]},
+  {t:3.333,label:'2023',q:'Q3',yields:[5.51,5.54,5.47,5.02,4.79,4.49,4.47,4.35,4.59,4.39]},
+  {t:3.361,label:'2024',q:'Q1',yields:[5.45,5.41,5.18,4.73,4.48,4.28,4.34,4.26,4.52,4.35]},
+  {t:3.389,label:'2024',q:'Q3',yields:[4.95,4.70,4.30,3.92,3.78,3.70,3.75,3.80,4.05,4.10]},
+  {t:3.417,label:'2025',q:'Q1',yields:[4.30,4.35,4.29,4.26,4.29,4.37,4.48,4.57,4.78,4.82]},
+  {t:3.444,label:'2025',q:'Q4',yields:[4.20,4.25,4.22,4.25,4.28,4.40,4.52,4.68,4.95,5.02]},
+  {t:3.472,label:'2026',q:'Q1',yields:[4.10,4.18,4.22,4.28,4.38,4.55,4.72,4.85,5.15,5.22]},
+];
+
+const T_MAX = KEYFRAMES[KEYFRAMES.length-1].t;
+KEYFRAMES.forEach(k => k.tn = k.t / T_MAX);
+
+const YEAR_TICKS = [];
+for (let y = 1990; y <= 2026; y += 4) YEAR_TICKS.push(y);
+
+function lerp(a,b,t){ return a + (b-a)*t; }
+function interpCurve(tn){
+  let i = 0;
+  while (i < KEYFRAMES.length-2 && KEYFRAMES[i+1].tn <= tn) i++;
+  const k0 = KEYFRAMES[i], k1 = KEYFRAMES[i+1];
+  const lc = Math.max(0, Math.min(1, (tn - k0.tn) / (k1.tn - k0.tn)));
+  return {
+    yields: k0.yields.map((_,j) => lerp(k0.yields[j], k1.yields[j], lc)),
+    label: lc < 0.5 ? k0.label : k1.label,
+    q:     lc < 0.5 ? k0.q     : k1.q,
+  };
+}
+
+// ═══════════════════════════════════════════════
+// BUILD STATIC SVG AXES
+// ═══════════════════════════════════════════════
+const ygTop = document.getElementById('yg-top');
+const xtTop = document.getElementById('xt-top');
+for (let y = 0; y <= 10; y++) {
+  const py = tyScale(y);
+  const ln = document.createElementNS('http://www.w3.org/2000/svg','line');
+  ln.setAttribute('x1',0); ln.setAttribute('x2',TW);
+  ln.setAttribute('y1',py); ln.setAttribute('y2',py);
+  ln.setAttribute('class', y%2===0 ? 'axis-line':'tick-line');
+  ln.style.opacity = '0.1';
+  ygTop.appendChild(ln);
+  if (y%2===0) {
+    const tx = document.createElementNS('http://www.w3.org/2000/svg','text');
+    tx.setAttribute('x',-10); tx.setAttribute('y',py);
+    tx.setAttribute('text-anchor','end'); tx.setAttribute('dominant-baseline','middle');
+    tx.setAttribute('class','axis-label'); tx.textContent = y+'%';
+    ygTop.appendChild(tx);
+  }
+}
+MATURITIES.forEach((m,i) => {
+  const px = txScale(m);
+  const ln = document.createElementNS('http://www.w3.org/2000/svg','line');
+  ln.setAttribute('x1',px); ln.setAttribute('x2',px); ln.setAttribute('y1',TH); ln.setAttribute('y2',TH+5);
+  ln.setAttribute('class','axis-line'); xtTop.appendChild(ln);
+  const tx = document.createElementNS('http://www.w3.org/2000/svg','text');
+  tx.setAttribute('x',px); tx.setAttribute('y',TH+18); tx.setAttribute('text-anchor','middle');
+  tx.setAttribute('class','axis-label'); tx.textContent = MAT_LABELS[i]; xtTop.appendChild(tx);
+});
+const dotsG = document.getElementById('dots');
+MATURITIES.forEach(() => {
+  const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  c.setAttribute('r','4'); c.setAttribute('class','curve-dot'); dotsG.appendChild(c);
+});
+const dots = dotsG.querySelectorAll('circle');
+
+const ygBot = document.getElementById('yg-bot');
+const xtBot = document.getElementById('xt-bot');
+for (let s = S_MIN; s <= S_MAX; s += 50) {
+  const py = byScale(s);
+  const ln = document.createElementNS('http://www.w3.org/2000/svg','line');
+  ln.setAttribute('x1',0); ln.setAttribute('x2',BW); ln.setAttribute('y1',py); ln.setAttribute('y2',py);
+  ln.setAttribute('class', s===0 ? 'axis-line':'tick-line');
+  if (s===0) { ln.style.opacity='0.3'; ln.style.strokeDasharray='6 4'; }
+  ygBot.appendChild(ln);
+  if (s % 100 === 0) {
+    const tx = document.createElementNS('http://www.w3.org/2000/svg','text');
+    tx.setAttribute('x',-10); tx.setAttribute('y',py);
+    tx.setAttribute('text-anchor','end'); tx.setAttribute('dominant-baseline','middle');
+    tx.setAttribute('class','axis-label'); tx.textContent = (s>0?'+':'')+s; ygBot.appendChild(tx);
+  }
+}
+document.getElementById('zero-line').setAttribute('y1', byScale(0));
+document.getElementById('zero-line').setAttribute('y2', byScale(0));
+
+YEAR_TICKS.forEach(y => {
+  const tn = (y-1990)/(2026-1990);
+  const px = bxScale(tn);
+  const ln = document.createElementNS('http://www.w3.org/2000/svg','line');
+  ln.setAttribute('x1',px); ln.setAttribute('x2',px); ln.setAttribute('y1',BH); ln.setAttribute('y2',BH+5);
+  ln.setAttribute('class','axis-line'); xtBot.appendChild(ln);
+  const guide = document.createElementNS('http://www.w3.org/2000/svg','line');
+  guide.setAttribute('x1',px); guide.setAttribute('x2',px); guide.setAttribute('y1',0); guide.setAttribute('y2',BH);
+  guide.setAttribute('class','tick-line'); xtBot.appendChild(guide);
+  const tx = document.createElementNS('http://www.w3.org/2000/svg','text');
+  tx.setAttribute('x',px); tx.setAttribute('y',BH+18); tx.setAttribute('text-anchor','middle');
+  tx.setAttribute('class','axis-label'); tx.textContent = y; xtBot.appendChild(tx);
+});
+
+// ═══════════════════════════════════════════════
+// BACKGROUND CANVAS
+// ═══════════════════════════════════════════════
+const bgCanvas = document.getElementById('bg-canvas');
+bgCanvas.width = 1280; bgCanvas.height = 950;
+const bgCtx = bgCanvas.getContext('2d');
+let bgR=255,bgG=255,bgB=255, tgR=255,tgG=255,tgB=255;
+const REGIME_BG = {
+  bull:     {r:224,g:247,b:232},
+  bear:     {r:255,g:228,b:228},
+  inverted: {r:255,g:240,b:215},
+  neutral:  {r:255,g:255,b:255},
+};
+function drawBg() {
+  bgR += (tgR-bgR)*0.04; bgG += (tgG-bgG)*0.04; bgB += (tgB-bgB)*0.04;
+  bgCtx.fillStyle = `rgb(${Math.round(bgR)},${Math.round(bgG)},${Math.round(bgB)})`;
+  bgCtx.fillRect(0,0,1280,950);
+}
+
+// ═══════════════════════════════════════════════
+// PATH HELPERS
+// ═══════════════════════════════════════════════
+function pathD(pts) {
+  let d = `M ${pts[0][0]} ${pts[0][1]}`;
+  for (let i=1; i<pts.length; i++) {
+    const p=pts[i-1], c=pts[i], cx=(p[0]+c[0])/2;
+    d += ` C ${cx} ${p[1]}, ${cx} ${c[1]}, ${c[0]} ${c[1]}`;
+  }
+  return d;
+}
+function areaD_top(pts) {
+  return pathD(pts) + ` L ${pts[pts.length-1][0]} ${TH} L ${pts[0][0]} ${TH} Z`;
+}
+function spreadAreaD(hist) {
+  if (hist.length < 2) return '';
+  const zero = byScale(0);
+  let d = pathD(hist);
+  return d + ` L ${hist[hist.length-1][0]} ${zero} L ${hist[0][0]} ${zero} Z`;
+}
+
+// ═══════════════════════════════════════════════
+// DOM REFS
+// ═══════════════════════════════════════════════
+const curvePath    = document.getElementById('yield-curve');
+const areaPath     = document.getElementById('yield-area');
+const centerRegime = document.getElementById('center-regime');
+const centerSub    = document.getElementById('center-sub');
+const regimeDot    = document.getElementById('regime-dot');
+const regimeText   = document.getElementById('regime-text');
+const spreadLine   = document.getElementById('spread-line');
+const spreadArea   = document.getElementById('spread-area');
+const spreadDot    = document.getElementById('spread-dot');
+const spreadRV     = document.getElementById('spread-readout-value');
+const scrubFill    = document.getElementById('scrubber-fill');
+const timeLabel    = document.getElementById('time-label');
+const iconPause    = document.getElementById('icon-pause');
+const iconPlay     = document.getElementById('icon-play');
+const scrubWrap    = document.getElementById('scrubber-wrap');
+const scrubTrack   = document.getElementById('scrubber-track');
+
+// ═══════════════════════════════════════════════
+// ANIMATION STATE
+// ═══════════════════════════════════════════════
+const DURATION = 25000;
+let startTime  = null;
+let elapsed    = 0;
+let paused     = false;
+let rafId      = null;
+let prevYields = null;
+
+// Pre-computed spread history for ALL time steps (for seek)
+// We store {tn, spread} for 500 steps
+const HISTORY_STEPS = 500;
+const allSpreads = [];
+for (let i=0; i<=HISTORY_STEPS; i++) {
+  const tn = i/HISTORY_STEPS;
+  const {yields} = interpCurve(tn);
+  allSpreads.push({ tn, spread: (yields[7]-yields[3])*100 });
+}
+
+function fmtTime(ms) {
+  const s = Math.floor(ms/1000);
+  return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+}
+function setPlayIcon(playing) {
+  iconPause.style.display = playing ? 'block' : 'none';
+  iconPlay.style.display  = playing ? 'none'  : 'block';
+}
+
+// ═══════════════════════════════════════════════
+// RENDER A SINGLE FRAME at normalised time tn (0..1)
+// ═══════════════════════════════════════════════
+function renderAt(tn) {
+  const {yields, label, q} = interpCurve(tn);
+  const pts = yields.map((y,i) => [txScale(MATURITIES[i]), tyScale(y)]);
+
+  curvePath.setAttribute('d', pathD(pts));
+  areaPath.setAttribute('d',  areaD_top(pts));
+  dots.forEach((d,i) => { d.setAttribute('cx', pts[i][0]); d.setAttribute('cy', pts[i][1]); });
+
+  const spread = (yields[7] - yields[3]) * 100;
+  spreadRV.textContent = (spread>=0?'+':'') + Math.round(spread) + ' bps';
+
+  // Regime
+  let regime='neutral', regLabel='—', dotColor='#aaa', textColor='rgba(0,0,0,0.45)', lineColor='#888';
+  if (spread > 20 && prevYields) {
+    const dS = yields[3]-prevYields[3], dL = yields[7]-prevYields[7];
+    if (dS < -0.003 || dL > dS) {
+      regime='bull'; regLabel='BULL STEEPENING'; dotColor='#16a34a'; textColor='#14532d'; lineColor='#16a34a';
+    } else {
+      regime='bear'; regLabel='BEAR STEEPENING'; dotColor='#dc2626'; textColor='#7f1d1d'; lineColor='#dc2626';
+    }
+  } else if (spread < -20) {
+    regime='inverted'; regLabel='INVERTED'; dotColor='#ea580c'; textColor='#7c2d12'; lineColor='#ea580c';
+  } else {
+    regLabel='FLATTENING'; dotColor='#64748b'; textColor='rgba(0,0,0,0.4)'; lineColor='#64748b';
+  }
+
+  regimeDot.style.background   = dotColor;
+  regimeDot.style.boxShadow    = `0 0 5px ${dotColor}50`;
+  regimeText.textContent        = regLabel;
+  regimeText.style.color        = textColor;
+  centerRegime.textContent      = regLabel;
+  centerRegime.style.color      = `${dotColor}18`;
+  centerSub.textContent         = (spread>=0?'+':'') + Math.round(spread) + ' bps  ·  2s10s Spread  ·  ' + label + ' ' + q;
+  centerSub.style.color         = `${dotColor}40`;
+  spreadRV.style.color          = dotColor;
+
+  const c = REGIME_BG[regime] || REGIME_BG.neutral;
+  tgR=c.r; tgG=c.g; tgB=c.b; drawBg();
+
+  // Spread chart — draw history up to current tn
+  const histPts = allSpreads
+    .filter(s => s.tn <= tn + 0.0001)
+    .map(s => [bxScale(s.tn), byScale(s.spread)]);
+
+  if (histPts.length >= 2) {
+    spreadLine.setAttribute('d', pathD(histPts));
+    spreadLine.setAttribute('stroke', lineColor);
+    spreadArea.setAttribute('d', spreadAreaD(histPts));
+    spreadArea.setAttribute('fill', lineColor);
+  }
+
+  // Dot exactly at current position
+  const bx = bxScale(tn);
+  const by = byScale(spread);
+  spreadDot.setAttribute('cx', bx);
+  spreadDot.setAttribute('cy', by);
+  spreadDot.setAttribute('fill', lineColor);
+
+  // Scrubber
+  scrubFill.style.width = (tn * 100).toFixed(3) + '%';
+  timeLabel.textContent = fmtTime(tn * DURATION) + ' / ' + fmtTime(DURATION);
+
+  prevYields = [...yields];
+}
+
+// ═══════════════════════════════════════════════
+// ANIMATION LOOP
+// ═══════════════════════════════════════════════
+function frame(ts) {
+  if (paused) return;
+  if (!startTime) startTime = ts - elapsed;
+  elapsed = ts - startTime;
+  const t  = Math.min(elapsed / DURATION, 1);
+  const te = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+
+  renderAt(te);
+
+  if (t < 1) {
+    rafId = requestAnimationFrame(frame);
+  } else {
+    setPlayIcon(false);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// CONTROLS
+// ═══════════════════════════════════════════════
+document.getElementById('play-btn').addEventListener('click', () => {
+  if (elapsed >= DURATION) {
+    // Restart from beginning
+    elapsed = 0; startTime = null; prevYields = null; paused = false;
+    setPlayIcon(true);
+    rafId = requestAnimationFrame(frame);
+    return;
+  }
+  paused = !paused;
+  setPlayIcon(!paused);
+  if (!paused) {
+    startTime = null; // will recalculate from elapsed
+    rafId = requestAnimationFrame(frame);
+  } else {
+    cancelAnimationFrame(rafId);
+  }
+});
+
+document.getElementById('restart-btn').addEventListener('click', () => {
+  cancelAnimationFrame(rafId);
+  elapsed = 0; startTime = null; prevYields = null; paused = false;
+  setPlayIcon(true);
+  rafId = requestAnimationFrame(frame);
+});
+
+// ── Seek via scrubber ──
+function getRatio(clientX) {
+  const rect = scrubTrack.getBoundingClientRect();
+  return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+}
+
+function seekTo(clientX) {
+  const ratio = getRatio(clientX);
+  const te = ratio < 0.5 ? 2*ratio*ratio : -1+(4-2*ratio)*ratio;
+  elapsed = ratio * DURATION;
+  startTime = null;
+  prevYields = null;
+  renderAt(te);
+  if (!paused) {
+    cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(frame);
+  }
+}
+
+let dragging = false;
+scrubWrap.addEventListener('mousedown', e => {
+  e.preventDefault();
+  dragging = true;
+  scrubWrap.classList.add('dragging');
+  seekTo(e.clientX);
+});
+window.addEventListener('mousemove', e => { if (dragging) seekTo(e.clientX); });
+window.addEventListener('mouseup',   () => {
+  if (dragging) { dragging = false; scrubWrap.classList.remove('dragging'); }
+});
+
+// Touch
+scrubWrap.addEventListener('touchstart', e => {
+  e.preventDefault();
+  dragging = true;
+  scrubWrap.classList.add('dragging');
+  seekTo(e.touches[0].clientX);
+}, {passive:false});
+window.addEventListener('touchmove', e => {
+  if (dragging) seekTo(e.touches[0].clientX);
+}, {passive:true});
+window.addEventListener('touchend', () => {
+  if (dragging) { dragging = false; scrubWrap.classList.remove('dragging'); }
+});
+
+// ── Auto-start ──
+rafId = requestAnimationFrame(frame);
+</script>
+</body>
+</html>

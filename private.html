@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privat – Daniel Raab</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --ink: #181818;
+    --muted: #999;
+    --faint: #ccc;
+    --accent: #b8966e;
+    --bg: #f9f8f6;
+    --line: #e9e5e0;
+    --error: #b03030;
+    --success: #4a8c6a;
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ══════════════════════ LOCK SCREEN */
+  #lock {
+    position: fixed; inset: 0; z-index: 200;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  #lock.out {
+    opacity: 0;
+    transform: scale(1.04);
+    pointer-events: none;
+  }
+
+  .lock-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 4rem;
+  }
+
+  .lock-icon {
+    width: 40px; height: 40px;
+    color: var(--ink);
+    margin-bottom: 2.2rem;
+    opacity: 0.7;
+  }
+
+  .lock-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.9rem;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.4rem;
+  }
+
+  .lock-sub {
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 3.2rem;
+  }
+
+  .lock-form {
+    width: min(340px, 90vw);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .input-wrap { position: relative; }
+
+  .pw-input {
+    width: 100%;
+    padding: 0.9rem 3rem 0.9rem 1.1rem;
+    border: 1px solid var(--line);
+    background: #fff;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 300;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .pw-input::placeholder { color: var(--faint); letter-spacing: 0.05em; }
+  .pw-input:focus { border-color: var(--accent); }
+  .pw-input.shake { animation: shake 0.38s ease; border-color: var(--error); }
+
+  .eye-btn {
+    position: absolute; right: 0.85rem; top: 50%;
+    transform: translateY(-50%);
+    background: none; border: none; cursor: pointer;
+    color: var(--faint); display: flex; align-items: center;
+    transition: color 0.2s;
+  }
+  .eye-btn:hover { color: var(--muted); }
+  .eye-btn svg { width: 16px; height: 16px; }
+
+  .btn-primary {
+    padding: 0.85rem;
+    background: var(--ink);
+    color: #fff;
+    border: none; cursor: pointer;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    transition: background 0.2s;
+  }
+  .btn-primary:hover { background: #333; }
+
+  .or-row {
+    display: flex; align-items: center; gap: 1rem;
+    font-size: 0.62rem; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--faint);
+  }
+  .or-row::before, .or-row::after {
+    content: ''; flex: 1; height: 1px; background: var(--line);
+  }
+
+  .btn-bio {
+    padding: 0.85rem;
+    background: none;
+    border: 1px solid var(--line);
+    cursor: pointer;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-bio:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-bio svg { width: 15px; height: 15px; }
+
+  .msg {
+    min-height: 1.1em;
+    font-size: 0.73rem;
+    text-align: center;
+    letter-spacing: 0.06em;
+    color: var(--error);
+  }
+  .msg.ok { color: var(--success); }
+
+  .back-link {
+    margin-top: 3rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--faint);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--muted); }
+
+  /* ══════════════════════ PRIVATE CONTENT */
+  #content { display: none; }
+  #content.show { display: block; }
+
+  .top-bar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1.3rem 3rem;
+    background: rgba(249,248,246,0.94);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .bar-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.15rem;
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    color: var(--ink);
+  }
+
+  .bar-right { display: flex; align-items: center; gap: 1.8rem; }
+
+  .bar-badge {
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    padding: 0.22rem 0.7rem;
+  }
+
+  .btn-out {
+    background: none; border: none;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--faint);
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .btn-out:hover { color: var(--ink); }
+
+  /* ── CONTENT AREA ── */
+  .inner {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 9rem 2rem 6rem;
+  }
+
+  .page-eyebrow {
+    font-size: 0.65rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+
+  .page-heading {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 300;
+    line-height: 1.12;
+    margin-bottom: 3.5rem;
+  }
+
+  /* ── LINK LIST ── */
+  .link-list { display: flex; flex-direction: column; }
+
+  .link-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.4rem 0;
+    border-bottom: 1px solid var(--line);
+    text-decoration: none;
+    color: var(--ink);
+    gap: 2rem;
+    transition: padding-left 0.2s;
+  }
+  .link-item:first-child { border-top: 1px solid var(--line); }
+  .link-item:hover { padding-left: 0.5rem; }
+
+  .link-item:hover .link-title { color: var(--accent); }
+
+  .link-meta { flex: 1; }
+
+  .link-tag {
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 0.3rem;
+  }
+
+  .link-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem;
+    font-weight: 300;
+    transition: color 0.2s;
+  }
+
+  .link-arrow {
+    color: var(--faint);
+    font-size: 1rem;
+    transition: color 0.2s, transform 0.2s;
+  }
+  .link-item:hover .link-arrow {
+    color: var(--accent);
+    transform: translateX(3px);
+  }
+
+  /* ── PLACEHOLDER ── */
+  .link-item.empty {
+    opacity: 0.35;
+    cursor: default;
+  }
+  .link-item.empty:hover { padding-left: 0; }
+  .link-item.empty:hover .link-title { color: var(--ink); }
+  .link-item.empty:hover .link-arrow { color: var(--faint); transform: none; }
+
+  /* ── ADD HINT ── */
+  .add-hint {
+    margin-top: 2rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    color: var(--faint);
+    text-align: center;
+    font-style: italic;
+  }
+
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-5px)}
+    40%{transform:translateX(5px)}
+    60%{transform:translateX(-3px)}
+    80%{transform:translateX(3px)}
+  }
+
+  @media (max-width: 600px) {
+    .top-bar { padding: 1.1rem 1.4rem; }
+    .inner { padding: 7rem 1.4rem 4rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════ LOCK SCREEN -->
+<div id="lock">
+  <span class="lock-name">Daniel Raab</span>
+
+  <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+    <rect x="3" y="11" width="18" height="11" rx="2"/>
+    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </svg>
+
+  <h1 class="lock-title">Privater Bereich</h1>
+  <p class="lock-sub">Zugang geschützt</p>
+
+  <div class="lock-form">
+    <div class="input-wrap">
+      <input type="password" id="pw" class="pw-input"
+             placeholder="Passwort …"
+             autocomplete="current-password"
+             onkeydown="if(event.key==='Enter')tryPw()">
+      <button class="eye-btn" onclick="toggleEye()" aria-label="Anzeigen">
+        <svg id="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
+
+    <button class="btn-primary" onclick="tryPw()">Einloggen</button>
+
+    <div class="or-row">oder</div>
+
+    <button class="btn-bio" id="bio-btn" onclick="tryBio()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/>
+        <path d="M8 12c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4"/>
+      </svg>
+      Touch ID / Face ID
+    </button>
+
+    <p class="msg" id="msg"></p>
+  </div>
+
+  <a href="index.html" class="back-link">← Zurück</a>
+</div>
+
+<!-- ══════════════════════════════════════ PRIVATE CONTENT -->
+<div id="content">
+
+  <div class="top-bar">
+    <a href="index.html" class="bar-name">Daniel Raab</a>
+    <div class="bar-right">
+      <span class="bar-badge">Privat</span>
+      <button class="btn-out" onclick="logout()">Abmelden</button>
+    </div>
+  </div>
+
+  <div class="inner">
+    <p class="page-eyebrow">Privat</p>
+    <h1 class="page-heading">Meine<br><em style="font-style:italic;color:var(--accent)">Seiten</em></h1>
+
+    <div class="link-list">
+
+      <a href="firstfive_praesentation.html" class="link-item">
+        <div class="link-meta">
+          <p class="link-tag">HTML</p>
+          <p class="link-title">firstfive Präsentation</p>
+        </div>
+        <span class="link-arrow">→</span>
+      </a>
+
+      <a href="warburg_jahresausblick_2026_interactive3.html" class="link-item">
+        <div class="link-meta">
+          <p class="link-tag">HTML</p>
+          <p class="link-title">Warburg Outlook 2026</p>
+        </div>
+        <span class="link-arrow">→</span>
+      </a>
+
+      <a href="treasury_dashboard_v3.html" class="link-item">
+        <div class="link-meta">
+          <p class="link-tag">HTML</p>
+          <p class="link-title">Treasury Outlook</p>
+        </div>
+        <span class="link-arrow">→</span>
+      </a>
+
+      <a href="yield-curve-animation_4.html" class="link-item">
+        <div class="link-meta">
+          <p class="link-tag">HTML</p>
+          <p class="link-title">US Yield Curve Animation</p>
+        </div>
+        <span class="link-arrow">→</span>
+      </a>
+
+      <div class="link-item empty">
+        <div class="link-meta">
+          <p class="link-tag">Platzhalter</p>
+          <p class="link-title">Neue Seite</p>
+        </div>
+        <span class="link-arrow">→</span>
+      </div>
+
+    </div>
+
+    <p class="add-hint">Weitere Links einfach im HTML ergänzen</p>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════ SCRIPT -->
+<script>
+  const PASSWORD   = "Xq7$mK2#pL9!vN4@wR6&jT";
+  const SESSION_KEY = "dr_priv_26";
+
+  /* ── unlock ── */
+  function unlock() {
+    sessionStorage.setItem(SESSION_KEY, "1");
+    document.getElementById("lock").classList.add("out");
+    setTimeout(() => {
+      document.getElementById("lock").style.display = "none";
+      document.getElementById("content").classList.add("show");
+    }, 700);
+  }
+
+  /* ── password ── */
+  function tryPw() {
+    const pw  = document.getElementById("pw");
+    const msg = document.getElementById("msg");
+    if (pw.value === PASSWORD) {
+      msg.textContent = "";
+      unlock();
+    } else {
+      msg.textContent = "Falsches Passwort.";
+      pw.classList.add("shake");
+      setTimeout(() => pw.classList.remove("shake"), 400);
+      pw.value = "";
+      pw.focus();
+    }
+  }
+
+  /* ── biometric (WebAuthn) ── */
+  async function tryBio() {
+    const msg = document.getElementById("msg");
+    msg.textContent = "";
+
+    if (!window.PublicKeyCredential) {
+      msg.textContent = "WebAuthn nicht unterstützt – bitte Passwort verwenden.";
+      return;
+    }
+
+    try {
+      const avail = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      if (!avail) {
+        msg.textContent = "Touch ID / Face ID auf diesem Gerät nicht verfügbar.";
+        return;
+      }
+
+      const stored = localStorage.getItem("dr_wac");
+
+      if (!stored) {
+        /* first use: register */
+        msg.textContent = "Einrichtung …";
+        const cred = await navigator.credentials.create({ publicKey: {
+          challenge: crypto.getRandomValues(new Uint8Array(32)),
+          rp: { name: "Daniel Raab", id: location.hostname || "localhost" },
+          user: {
+            id: crypto.getRandomValues(new Uint8Array(16)),
+            name: "daniel@raab.koeln",
+            displayName: "Daniel Raab"
+          },
+          pubKeyCredParams: [
+            { type: "public-key", alg: -7 },
+            { type: "public-key", alg: -257 }
+          ],
+          authenticatorSelection: {
+            authenticatorAttachment: "platform",
+            userVerification: "required"
+          },
+          timeout: 60000
+        }});
+        localStorage.setItem("dr_wac", btoa(String.fromCharCode(...new Uint8Array(cred.rawId))));
+        msg.className = "msg ok";
+        msg.textContent = "✓ Erfolgreich";
+        setTimeout(unlock, 700);
+
+      } else {
+        /* subsequent: verify */
+        const idArr = Uint8Array.from(atob(stored), c => c.charCodeAt(0));
+        await navigator.credentials.get({ publicKey: {
+          challenge: crypto.getRandomValues(new Uint8Array(32)),
+          allowCredentials: [{ id: idArr, type: "public-key" }],
+          userVerification: "required",
+          timeout: 60000
+        }});
+        msg.className = "msg ok";
+        msg.textContent = "✓ Erkannt";
+        setTimeout(unlock, 500);
+      }
+
+    } catch(e) {
+      msg.className = "msg";
+      if (e.name === "NotAllowedError") {
+        msg.textContent = "Abgebrochen.";
+      } else {
+        msg.textContent = "Nicht verfügbar – bitte Passwort verwenden.";
+      }
+    }
+  }
+
+  /* ── helpers ── */
+  function toggleEye() {
+    const pw = document.getElementById("pw");
+    const svg = document.getElementById("eye");
+    if (pw.type === "password") {
+      pw.type = "text";
+      svg.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+    } else {
+      pw.type = "password";
+      svg.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+    }
+  }
+
+  function logout() {
+    sessionStorage.removeItem(SESSION_KEY);
+    location.reload();
+  }
+
+  /* ── auto-unlock if session active ── */
+  if (sessionStorage.getItem(SESSION_KEY)) {
+    document.getElementById("lock").style.display = "none";
+    document.getElementById("content").classList.add("show");
+  } else {
+    document.getElementById("pw").focus();
+  }
+</script>
+</body>
+</html>

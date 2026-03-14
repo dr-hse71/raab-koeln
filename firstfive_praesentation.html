@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>firstfive – Vermögensverwaltungs-Ranking 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Oswald:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<style>
+  :root {
+    --black: rgb(0,0,0);
+    --red: rgb(230,30,30);
+    --white: rgb(255,255,255);
+    --beige: rgb(197,185,172);
+    --blue: rgb(0,88,124);
+    --grey: rgb(64,64,64);
+    --beige-light: rgb(245,241,237);
+
+    --font-headline: 'Oswald', sans-serif;
+    --font-body: 'EB Garamond', Georgia, serif;
+
+    --fs-slide-title: 24px;
+    --fs-between: 18.7px;
+    --fs-body: 16px;
+    --fs-statement: 32px;
+    --fs-label: 13px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    font-size: var(--fs-body);
+    background: var(--white);
+    color: var(--black);
+    line-height: 1.55;
+  }
+
+  /* ── TOP NAV ── */
+  .nav-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 200;
+    background: var(--white);
+    border-bottom: 2px solid var(--red);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2.5rem;
+    height: 48px;
+  }
+  .nav-logo {
+    font-family: var(--font-headline);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--black);
+  }
+  .nav-logo span { color: var(--red); }
+  .nav-links { display: flex; gap: 0; }
+  .nav-link {
+    font-family: var(--font-headline);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey);
+    text-decoration: none;
+    padding: 0 1.2rem;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    border-left: 1px solid rgba(0,0,0,0.08);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .nav-link:hover, .nav-link.active {
+    background: var(--black);
+    color: var(--white);
+  }
+
+  /* ── ARROW NAVIGATION (bottom right) ── */
+  .arrow-nav {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 2rem;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    align-items: center;
+  }
+  .arrow-btn {
+    width: 38px; height: 38px;
+    background: var(--black);
+    color: var(--white);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: background 0.2s;
+    user-select: none;
+    border-radius: 2px;
+  }
+  .arrow-btn:hover { background: var(--red); }
+  .arrow-btn:disabled { background: var(--beige); cursor: default; }
+  .arrow-slide-counter {
+    font-family: var(--font-headline);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--grey);
+    text-align: center;
+    line-height: 1;
+    padding: 0.15rem 0;
+  }
+
+  /* ── SLIDES ── */
+  .slide {
+    min-height: 100vh;
+    width: 100%;
+    padding: 72px 3rem 3rem 3rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .slide-header {
+    border-bottom: 1px solid var(--beige);
+    padding-bottom: 1rem;
+    margin-bottom: 1.8rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .slide-category {
+    font-family: var(--font-headline);
+    font-size: var(--fs-label);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--red);
+  }
+  .slide-title {
+    font-family: var(--font-headline);
+    font-size: var(--fs-slide-title);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--black);
+    line-height: 1.15;
+    margin-top: 0.4rem;
+  }
+  .page-indicator {
+    font-family: var(--font-headline);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--beige);
+  }
+  .slide-footer {
+    margin-top: auto;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--beige);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-brand {
+    font-family: var(--font-headline);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--beige);
+  }
+  .footer-note {
+    font-family: var(--font-body);
+    font-size: 11px;
+    color: var(--beige);
+    font-style: italic;
+  }
+  .red-rule { width: 48px; height: 3px; background: var(--red); margin: 1.2rem 0; }
+
+  /* ── SLIDE 1 ── */
+  .hero-statement {
+    font-family: var(--font-headline);
+    font-size: var(--fs-statement);
+    font-weight: 400;
+    color: var(--black);
+    max-width: 820px;
+    line-height: 1.25;
+    margin-bottom: 2rem;
+  }
+  .hero-statement em { font-style: normal; color: var(--red); font-weight: 700; }
+
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border: 1px solid var(--beige);
+    max-width: 900px;
+    margin-bottom: 2rem;
+  }
+  .kpi {
+    padding: 1.6rem 1.8rem;
+    border-right: 1px solid var(--beige);
+    position: relative;
+  }
+  .kpi:last-child { border-right: none; }
+  .kpi::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 3px;
+    background: var(--red);
+  }
+  .kpi-value {
+    font-family: var(--font-headline);
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--black);
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+  .kpi-label {
+    font-family: var(--font-headline);
+    font-size: var(--fs-label);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin-bottom: 0.6rem;
+  }
+  .kpi p { font-size: 14px; color: var(--grey); line-height: 1.5; }
+
+  .intro-text { max-width: 820px; font-size: var(--fs-body); color: var(--grey); line-height: 1.65; }
+
+  /* ── SLIDE 2 ── */
+  .slide-2 { background: var(--beige-light); }
+
+  .two-col-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 3rem;
+    flex: 1;
+  }
+  .col-title {
+    font-family: var(--font-headline);
+    font-size: var(--fs-between);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--black);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--black);
+  }
+  .step-list { list-style: none; display: flex; flex-direction: column; gap: 0.9rem; }
+  .step-item { display: flex; gap: 1rem; align-items: flex-start; }
+  .step-num {
+    font-family: var(--font-headline);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--white);
+    background: var(--red);
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+  .step-body strong {
+    font-family: var(--font-headline);
+    font-size: var(--fs-body);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--black);
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+  .step-body p { font-size: 14px; color: var(--grey); line-height: 1.5; }
+
+  .chart-section { margin-top: 1.2rem; }
+  .chart-label {
+    font-family: var(--font-headline);
+    font-size: var(--fs-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin-bottom: 0.5rem;
+  }
+  .chart-wrap {
+    background: var(--white);
+    border: 1px solid var(--beige);
+    padding: 0.8rem 0.8rem 0.8rem 0.8rem;
+    height: 220px;
+    position: relative;
+  }
+
+  /* score table */
+  .score-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .score-table thead th {
+    font-family: var(--font-headline);
+    font-size: var(--fs-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--white);
+    background: var(--black);
+    padding: 0.55rem 0.7rem;
+    text-align: left;
+    border-right: 1px solid rgba(255,255,255,0.15);
+  }
+  .score-table thead th:last-child { border-right: none; }
+  .score-table tbody td {
+    padding: 0.45rem 0.7rem;
+    border-bottom: 1px solid var(--beige);
+    border-right: 1px solid var(--beige);
+    vertical-align: middle;
+    color: var(--black);
+  }
+  .score-table tbody td:last-child { border-right: none; }
+  .score-table tbody tr:hover td { background: rgba(197,185,172,0.2); }
+  .tag {
+    display: inline-block;
+    font-family: var(--font-headline);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+  .tag-gold { background: rgba(230,30,30,0.1); color: var(--red); }
+  .tag-silver { background: rgba(0,88,124,0.1); color: var(--blue); }
+  .total-row td {
+    background: var(--black) !important;
+    color: var(--white) !important;
+    font-family: var(--font-headline);
+    font-size: 14px;
+    border-color: var(--black) !important;
+  }
+  .table-caption { font-size: 12px; color: var(--grey); font-style: italic; margin-top: 0.5rem; line-height: 1.4; }
+
+  /* ── SLIDE 3: RESULTS 2026 ── */
+  .slide-3 { background: var(--white); }
+
+  .gesamtsieger-banner {
+    background: var(--black);
+    color: var(--white);
+    padding: 1.3rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    border-left: 6px solid var(--red);
+    margin-bottom: 1.8rem;
+    flex-wrap: wrap;
+  }
+  .gs-label {
+    font-family: var(--font-headline);
+    font-size: var(--fs-label);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--beige);
+    white-space: nowrap;
+  }
+  .gs-name {
+    font-family: var(--font-headline);
+    font-size: var(--fs-statement);
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1;
+  }
+  .gs-score {
+    font-family: var(--font-headline);
+    font-size: 38px;
+    font-weight: 700;
+    color: var(--red);
+    white-space: nowrap;
+  }
+  .gs-score span { font-size: 14px; color: var(--beige); font-weight: 400; display: block; }
+  .gs-desc { font-size: var(--fs-body); color: var(--beige); max-width: 400px; line-height: 1.5; }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--beige);
+    margin-bottom: 1.5rem;
+  }
+  .result-card {
+    padding: 1.4rem 1.6rem;
+    border-right: 1px solid var(--beige);
+    position: relative;
+  }
+  .result-card:last-child { border-right: none; }
+  .result-period {
+    font-family: var(--font-headline);
+    font-size: var(--fs-label);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin-bottom: 0.4rem;
+  }
+  .result-medal {
+    font-family: var(--font-headline);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--white);
+    background: var(--red);
+    display: inline-block;
+    padding: 3px 10px;
+    margin-bottom: 0.6rem;
+  }
+  .result-medal.blue { background: var(--blue); }
+  .result-winner {
+    font-family: var(--font-headline);
+    font-size: var(--fs-between);
+    font-weight: 700;
+    color: var(--black);
+    line-height: 1.2;
+    margin-bottom: 0.3rem;
+  }
+  .result-desc { font-size: 13px; color: var(--grey); line-height: 1.4; margin-bottom: 0.8rem; }
+  .result-podium { margin-top: 0.6rem; border-top: 1px solid var(--beige); padding-top: 0.6rem; }
+  .podium-row {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    margin-bottom: 0.3rem;
+    font-size: 13px;
+    color: var(--black);
+  }
+  .podium-place { font-family: var(--font-headline); font-size: 11px; font-weight: 700; width: 18px; text-align: center; color: var(--grey); }
+  .podium-name { flex: 1; }
+  .podium-pts { font-family: var(--font-headline); font-size: 12px; color: var(--blue); }
+
+  /* bar chart area */
+  .results-bar-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+  .results-chart-wrap {
+    background: var(--beige-light);
+    border: 1px solid var(--beige);
+    padding: 0.8rem;
+    height: 130px;
+  }
+
+  /* ── SLIDE 4: COMPARISON ── */
+  .slide-4 { background: var(--beige-light); }
+
+  .compare-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 0.5rem; }
+  .compare-table thead th {
+    font-family: var(--font-headline);
+    font-size: var(--fs-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.7rem 1rem;
+    text-align: center;
+    border-bottom: 2px solid var(--black);
+    border-right: 1px solid var(--beige);
+  }
+  .compare-table thead th:first-child { text-align: left; background: var(--white); }
+  .compare-table thead th:nth-child(2) { background: var(--black); color: var(--white); }
+  .compare-table thead th:last-child { border-right: none; }
+  .compare-table tbody th {
+    font-family: var(--font-body);
+    font-size: var(--fs-body);
+    font-weight: 400;
+    text-align: left;
+    padding: 0.55rem 1rem;
+    background: var(--white);
+    border-bottom: 1px solid var(--beige);
+    border-right: 1px solid var(--beige);
+    color: var(--black);
+  }
+  .compare-table tbody td {
+    text-align: center;
+    padding: 0.55rem 1rem;
+    border-bottom: 1px solid var(--beige);
+    border-right: 1px solid var(--beige);
+    vertical-align: middle;
+  }
+  .compare-table tbody td:last-child { border-right: none; }
+  .compare-table tbody td:nth-child(2) { background: rgba(230,30,30,0.04); }
+  .check { color: rgb(0,120,60); font-size: 16px; font-weight: bold; }
+  .cross { color: rgb(180,40,40); font-size: 16px; }
+  .partial { font-family: var(--font-headline); font-size: 11px; color: var(--blue); letter-spacing: 0.05em; }
+  .dots-high { color: var(--red); font-size: 13px; }
+  .dots-mid { color: var(--blue); font-size: 13px; }
+  .dots-low { color: var(--beige); font-size: 13px; }
+
+  .conclusion-box {
+    background: var(--white);
+    border-left: 4px solid var(--red);
+    padding: 1.1rem 1.4rem;
+    margin-top: 1.2rem;
+    font-size: var(--fs-body);
+    color: var(--black);
+    line-height: 1.6;
+  }
+  .conclusion-box strong {
+    font-family: var(--font-headline);
+    font-size: var(--fs-between);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    display: block;
+    margin-bottom: 0.4rem;
+  }
+
+  @media (max-width: 900px) {
+    .slide { padding: 72px 1.5rem 1.5rem; }
+    .kpi-row, .two-col-grid, .results-grid { grid-template-columns: 1fr; }
+    .gesamtsieger-banner { flex-direction: column; gap: 1rem; }
+    .results-bar-section { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="nav-bar">
+  <div class="nav-logo">first<span>five</span></div>
+  <div class="nav-links">
+    <a class="nav-link" data-slide="0">Überblick</a>
+    <a class="nav-link" data-slide="1">Methodik</a>
+    <a class="nav-link" data-slide="2">Ergebnisse 2026</a>
+    <a class="nav-link" data-slide="3">Vergleich</a>
+  </div>
+</nav>
+
+<!-- ARROW NAVIGATION -->
+<div class="arrow-nav">
+  <button class="arrow-btn" id="btn-up" title="Vorherige Seite (↑)">&#9650;</button>
+  <div class="arrow-slide-counter" id="slide-counter">1 / 4</div>
+  <button class="arrow-btn" id="btn-down" title="Nächste Seite (↓)">&#9660;</button>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     FOLIE 1: ÜBERBLICK
+════════════════════════════════════════ -->
+<section class="slide" id="slide-0">
+  <div class="slide-header">
+    <div>
+      <div class="slide-category">Vermögensverwaltungs-Ranking · Deutschland</div>
+      <div class="slide-title">firstfive – Faktenbasierte Exzellenz</div>
+    </div>
+    <div class="page-indicator">01 / 04</div>
+  </div>
+
+  <p class="hero-statement">
+    Das einzige Ranking Deutschlands, das ausschließlich <em>reale Kundendepots</em> und eine einheitliche finanzmathematische Methodik verwendet.
+  </p>
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-value">180+</div>
+      <div class="kpi-label">Reale Depots</div>
+      <p>Ausschließlich echte Kundendepots namhafter Banken und unabhängiger Verwalter. Keine Modellportfolios.</p>
+    </div>
+    <div class="kpi">
+      <div class="kpi-value">25+</div>
+      <div class="kpi-label">Jahre Erfahrung</div>
+      <p>Eine der längsten unabhängigen Tracking-Zeitreihen im deutschen Markt für Vermögensverwaltung.</p>
+    </div>
+    <div class="kpi">
+      <div class="kpi-value">300</div>
+      <div class="kpi-label">Max. Punkte</div>
+      <p>Nur wer über alle drei Risikoklassen und alle drei Zeiträume konstant überzeugt, kann Gesamtsieger werden.</p>
+    </div>
+  </div>
+
+  <div class="red-rule"></div>
+  <p class="intro-text">
+    Die firstfive AG ist ein unabhängiges Controlling- und Rankinginstitut ohne eigene Vermögensverwaltung und ohne produktspezifische Interessenskonflikte. Die jährliche Auszeichnung der besten Vermögensverwaltungen erfolgt in einem festlichen Rahmen – zuletzt am 10. Februar 2026 in der Villa Bonn in Frankfurt am Main.
+  </p>
+
+  <div class="slide-footer">
+    <div class="footer-brand">firstfive AG · Frankfurt am Main</div>
+    <div class="footer-note">Quellen: firstfive.com · boersen-zeitung.de · private-banking-magazin.de</div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════
+     FOLIE 2: METHODIK
+════════════════════════════════════════ -->
+<section class="slide slide-2" id="slide-1">
+  <div class="slide-header">
+    <div>
+      <div class="slide-category">Analytik &amp; Methodik</div>
+      <div class="slide-title">Wie firstfive bewertet</div>
+    </div>
+    <div class="page-indicator">02 / 04</div>
+  </div>
+
+  <div class="two-col-grid">
+    <div>
+      <div class="col-title">Der Bewertungsprozess</div>
+      <ul class="step-list">
+        <li class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <strong>Reale Depots als Datenbasis</strong>
+            <p>Ausschließlich echte Kundendepots – alle Transaktionskosten und Managemententscheidungen enthalten. Kein Börsenspiel.</p>
+          </div>
+        </li>
+        <li class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <strong>Drei Risikoklassen</strong>
+            <p>Konservativ · Moderat dynamisch · Dynamisch. Fairer Vergleich innerhalb gleicher Anlageprofile.</p>
+          </div>
+        </li>
+        <li class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <strong>Drei Betrachtungszeiträume</strong>
+            <p>12 Monate · 36 Monate · 60 Monate. Kontinuität über verschiedene Marktphasen wird belohnt.</p>
+          </div>
+        </li>
+        <li class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <strong>Sharpe Ratio als Kerngröße</strong>
+            <p>Rendite über dem risikolosen Zins, geteilt durch Volatilität. Risikonahme wird nicht belohnt.</p>
+          </div>
+        </li>
+        <li class="step-item">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <strong>Punkteaggregation</strong>
+            <p>Beste Sharpe Ratio = 33,33 Punkte je Risikoklasse. Alle anderen erhalten proportionale Punkte. Max. 300 Gesamtpunkte.</p>
+          </div>
+        </li>
+      </ul>
+
+      <div class="chart-section">
+        <div class="chart-label">Sharpe Ratio: Warum Rendite allein nicht entscheidet</div>
+        <div class="chart-wrap">
+          <canvas id="sharpeChart"></canvas>
+        </div>
+        <p style="font-size:12px; color:var(--grey); font-style:italic; margin-top:0.4rem;">Verwalter B: niedrigste Rendite, niedrigstes Risiko → beste Sharpe Ratio → <strong style="color:var(--red)">Gewinner</strong></p>
+      </div>
+    </div>
+
+    <div>
+      <div class="col-title">Weg zum Gesamtsieger</div>
+      <table class="score-table">
+        <thead>
+          <tr>
+            <th>Zeitraum</th>
+            <th>Risikoklasse</th>
+            <th>Sharpe</th>
+            <th>Punkte</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="3" style="color:var(--grey);font-size:13px;background:rgba(197,185,172,0.1)">12 Mon.</td>
+            <td>Konservativ</td>
+            <td>0.92 <span class="tag tag-gold">Best</span></td>
+            <td>33,3</td>
+          </tr>
+          <tr>
+            <td>Mod. dynamisch</td>
+            <td>0.78</td>
+            <td>28,2</td>
+          </tr>
+          <tr>
+            <td>Dynamisch</td>
+            <td>0.85 <span class="tag tag-silver">Top 3</span></td>
+            <td>30,7</td>
+          </tr>
+          <tr>
+            <td rowspan="3" style="color:var(--grey);font-size:13px;background:rgba(197,185,172,0.1)">36 Mon.</td>
+            <td>Konservativ</td>
+            <td>0.88 <span class="tag tag-silver">Top 3</span></td>
+            <td>31,9</td>
+          </tr>
+          <tr>
+            <td>Mod. dynamisch</td>
+            <td>0.91 <span class="tag tag-gold">Best</span></td>
+            <td>33,3</td>
+          </tr>
+          <tr>
+            <td>Dynamisch</td>
+            <td>0.80</td>
+            <td>28,9</td>
+          </tr>
+          <tr>
+            <td rowspan="3" style="color:var(--grey);font-size:13px;background:rgba(197,185,172,0.1)">60 Mon.</td>
+            <td>Konservativ</td>
+            <td>0.86</td>
+            <td>31,2</td>
+          </tr>
+          <tr>
+            <td>Mod. dynamisch</td>
+            <td>0.83</td>
+            <td>29,8</td>
+          </tr>
+          <tr>
+            <td>Dynamisch</td>
+            <td>0.89 <span class="tag tag-silver">Top 3</span></td>
+            <td>32,0</td>
+          </tr>
+          <tr class="total-row">
+            <td colspan="3">Gesamtpunktzahl</td>
+            <td>279,3 / 300</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="table-caption">Illustratives Beispiel. Ein Verwalter muss in <em>allen</em> neun Kombinationen aus Risikoklasse × Zeitraum stark abschneiden.</p>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <div class="footer-brand">firstfive AG · Frankfurt am Main</div>
+    <div class="footer-note">Bewertungslogik: Sharpe-Ratio-Punkte, max. 100 je Zeitraum, max. 300 gesamt</div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════
+     FOLIE 3: ERGEBNISSE 2026
+════════════════════════════════════════ -->
+<section class="slide slide-3" id="slide-2">
+  <div class="slide-header">
+    <div>
+      <div class="slide-category">Preisverleihung · 10. Februar 2026 · Villa Bonn, Frankfurt</div>
+      <div class="slide-title">firstfive Awards 2026 – Ergebnisse</div>
+    </div>
+    <div class="page-indicator">03 / 04</div>
+  </div>
+
+  <!-- Gesamtsieger -->
+  <div class="gesamtsieger-banner">
+    <div>
+      <div class="gs-label">Gesamtsieger 2026</div>
+      <div class="gs-name">M.M. Warburg &amp; CO</div>
+      <div style="font-size:13px; color:var(--beige); margin-top:0.3rem;">Hamburg · Sieger über alle drei Wertungszeiträume (3 &amp; 5 Jahre) + Rang 2 über 1 Jahr</div>
+    </div>
+    <div style="border-left:1px solid rgba(255,255,255,0.15); padding-left:2rem;">
+      <div class="gs-score">3× <span>Podestplatz</span></div>
+    </div>
+    <div style="border-left:1px solid rgba(255,255,255,0.15); padding-left:2rem; flex:1;">
+      <div class="gs-desc">„Wir haben viele tolle Unternehmen in Europa" – Daniel Hupfer, Leiter Portfolio Management M.M. Warburg. KI-Profiteure (Chiphersteller) + Stock Picking Europa als Performancetreiber über 3 und 5 Jahre.</div>
+    </div>
+  </div>
+
+  <!-- Drei Kategorien -->
+  <div class="results-grid">
+    <div class="result-card">
+      <div class="result-period">12-Monats-Wertung</div>
+      <div class="result-medal">&#9679; Gold</div>
+      <div class="result-winner">Bankhaus Bauer</div>
+      <div class="result-desc">Essen. Zwei Silber-Plätze in der konservativen und moderat dynamischen Risikoklasse. Technologieaktien (ASML) und Gold als Haupttreiber.</div>
+      <div class="result-podium">
+        <div class="podium-row"><span class="podium-place">#1</span><span class="podium-name">Bankhaus Bauer</span><span class="podium-pts">Gold</span></div>
+        <div class="podium-row"><span class="podium-place">#2</span><span class="podium-name">M.M. Warburg &amp; CO</span><span class="podium-pts">Silber</span></div>
+        <div class="podium-row"><span class="podium-place">#3</span><span class="podium-name">Rhein Asset Management</span><span class="podium-pts">Bronze</span></div>
+      </div>
+    </div>
+
+    <div class="result-card">
+      <div class="result-period">36-Monats-Wertung</div>
+      <div class="result-medal">&#9679; Gold</div>
+      <div class="result-winner">M.M. Warburg &amp; CO</div>
+      <div class="result-desc">Hamburg. Spitzenränge in konservativer und dynamischer Risikoklasse. KI-Thema über direkte Profiteure wie Chiphersteller gespielt.</div>
+      <div class="result-podium">
+        <div class="podium-row"><span class="podium-place">#1</span><span class="podium-name">M.M. Warburg &amp; CO</span><span class="podium-pts">Gold</span></div>
+        <div class="podium-row"><span class="podium-place">#2</span><span class="podium-name">Bankhaus Bauer</span><span class="podium-pts">Silber</span></div>
+        <div class="podium-row"><span class="podium-place">#3</span><span class="podium-name">LIQID Asset Mgmt.</span><span class="podium-pts">Bronze</span></div>
+      </div>
+    </div>
+
+    <div class="result-card" style="border-right:none;">
+      <div class="result-period">60-Monats-Wertung (Königsdisziplin)</div>
+      <div class="result-medal blue">&#9679; Gold</div>
+      <div class="result-winner">M.M. Warburg &amp; CO</div>
+      <div class="result-desc">Hamburg. Erfolgreiches Stock Picking in Europa als Fundament. Vorjahressieger DJE Kapital muss sich mit Bronze begnügen.</div>
+      <div class="result-podium">
+        <div class="podium-row"><span class="podium-place">#1</span><span class="podium-name">M.M. Warburg &amp; CO</span><span class="podium-pts">Gold</span></div>
+        <div class="podium-row"><span class="podium-place">#2</span><span class="podium-name">LIQID Asset Mgmt.</span><span class="podium-pts">Silber</span></div>
+        <div class="podium-row"><span class="podium-place">#3</span><span class="podium-name">DJE Kapital AG</span><span class="podium-pts">Bronze</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts & YoY -->
+  <div class="results-bar-section">
+    <div>
+      <div class="chart-label" style="font-family:var(--font-headline);font-size:var(--fs-label);letter-spacing:0.12em;text-transform:uppercase;color:var(--grey);margin-bottom:0.5rem;">Podestplätze 2026 nach Zeitraum</div>
+      <div class="results-chart-wrap">
+        <canvas id="resultsChart"></canvas>
+      </div>
+    </div>
+    <div style="background:var(--beige-light); border:1px solid var(--beige); padding:1.2rem;">
+      <div style="font-family:var(--font-headline);font-size:var(--fs-label);letter-spacing:0.15em;text-transform:uppercase;color:var(--grey);margin-bottom:0.8rem;">Vergleich Vorjahr 2025 vs. 2026</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr>
+            <th style="font-family:var(--font-headline);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.6rem;background:var(--black);color:var(--white);text-align:left;border-right:1px solid rgba(255,255,255,0.15);">Zeitraum</th>
+            <th style="font-family:var(--font-headline);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.6rem;background:var(--black);color:var(--white);text-align:left;border-right:1px solid rgba(255,255,255,0.15);">Sieger 2025</th>
+            <th style="font-family:var(--font-headline);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.6rem;background:var(--red);color:var(--white);text-align:left;">Sieger 2026</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:0.4rem 0.6rem;border-bottom:1px solid var(--beige);border-right:1px solid var(--beige);">12 Mon.</td>
+            <td style="padding:0.4rem 0.6rem;border-bottom:1px solid var(--beige);border-right:1px solid var(--beige);color:var(--grey);">Rhein Asset Mgmt.</td>
+            <td style="padding:0.4rem 0.6rem;border-bottom:1px solid var(--beige);font-weight:600;">Bankhaus Bauer</td>
+          </tr>
+          <tr>
+            <td style="padding:0.4rem 0.6rem;border-bottom:1px solid var(--beige);border-right:1px solid var(--beige);">36 Mon.</td>
+            <td style="padding:0.4rem 0.6rem;border-bottom:1px solid var(--beige);border-right:1px solid var(--beige);color:var(--grey);">LIQID Asset Mgmt.</td>
+            <td style="padding:0.4rem 0.6rem;border-bottom:1px solid var(--beige);font-weight:600;">M.M. Warburg</td>
+          </tr>
+          <tr>
+            <td style="padding:0.4rem 0.6rem;border-right:1px solid var(--beige);">60 Mon.</td>
+            <td style="padding:0.4rem 0.6rem;border-right:1px solid var(--beige);color:var(--grey);">DJE Kapital AG</td>
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">M.M. Warburg</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <div class="footer-brand">firstfive AG · Awards-Gala · Villa Bonn, Frankfurt · 10. Februar 2026</div>
+    <div class="footer-note">Quelle: Börsen-Zeitung, 10. Feb. 2026 · firstfive.com</div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════
+     FOLIE 4: VERGLEICH
+════════════════════════════════════════ -->
+<section class="slide slide-4" id="slide-3">
+  <div class="slide-header">
+    <div>
+      <div class="slide-category">Marktüberblick</div>
+      <div class="slide-title">firstfive im Wettbewerbsvergleich</div>
+    </div>
+    <div class="page-indicator">04 / 04</div>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th style="width:26%;">Kriterium</th>
+        <th>firstfive</th>
+        <th>Elite Report</th>
+        <th>Fuchs Richter</th>
+        <th>Capital / IVA</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>Reale Kundendepots</th>
+        <td><span class="check">✓</span></td>
+        <td><span class="check">✓</span></td>
+        <td><span class="partial">teilw.</span></td>
+        <td><span class="cross">✗</span></td>
+      </tr>
+      <tr>
+        <th>Risikoadjustierte Messung (Sharpe)</th>
+        <td><span class="check">✓</span></td>
+        <td><span class="check">✓</span></td>
+        <td><span class="partial">teilw.</span></td>
+        <td><span class="cross">✗</span></td>
+      </tr>
+      <tr>
+        <th>Beratungstest (verdeckte Testkunden)</th>
+        <td><span class="cross">✗</span></td>
+        <td><span class="check">✓</span></td>
+        <td><span class="check">✓</span></td>
+        <td><span class="check">✓</span></td>
+      </tr>
+      <tr>
+        <th>Servicequalität bewertet</th>
+        <td><span class="cross">✗</span></td>
+        <td><span class="check">✓</span></td>
+        <td><span class="check">✓</span></td>
+        <td><span class="check">✓</span></td>
+      </tr>
+      <tr>
+        <th>Zeiträume 1 / 3 / 5 Jahre</th>
+        <td><span class="check">✓</span></td>
+        <td><span class="partial">teilw.</span></td>
+        <td><span class="partial">teilw.</span></td>
+        <td><span class="cross">✗</span></td>
+      </tr>
+      <tr>
+        <th>Laufendes Quartals-Monitoring</th>
+        <td><span class="check">✓</span></td>
+        <td><span class="cross">✗</span></td>
+        <td><span class="partial">teilw.</span></td>
+        <td><span class="cross">✗</span></td>
+      </tr>
+      <tr>
+        <th>Fokus Anlageperformance</th>
+        <td><span class="dots-high">● ● ●</span></td>
+        <td><span class="dots-mid">● ● ○</span></td>
+        <td><span class="dots-mid">● ● ○</span></td>
+        <td><span class="dots-low">● ○ ○</span></td>
+      </tr>
+      <tr>
+        <th>Fokus Kundenbetreuung / Service</th>
+        <td><span class="dots-low">● ○ ○</span></td>
+        <td><span class="dots-high">● ● ●</span></td>
+        <td><span class="dots-mid">● ● ○</span></td>
+        <td><span class="dots-mid">● ● ○</span></td>
+      </tr>
+      <tr>
+        <th>Eignung: institutionelle Anleger</th>
+        <td><span class="check">✓ ✓</span></td>
+        <td><span class="check">✓</span></td>
+        <td><span class="check">✓</span></td>
+        <td><span class="partial">bedingt</span></td>
+      </tr>
+      <tr>
+        <th>Eignung: Neuauswahl eines Verwalters</th>
+        <td><span class="partial">bedingt</span></td>
+        <td><span class="check">✓ ✓</span></td>
+        <td><span class="check">✓ ✓</span></td>
+        <td><span class="check">✓</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="conclusion-box">
+    <strong>Fazit</strong>
+    firstfive ist die objektivste, rein quantitative Instanz für die tatsächliche Anlageperformance – ideal für Profis und institutionelle Anleger. Elite Report und Fuchs Richter ergänzen dies durch Beratungsqualität und Service und eignen sich besonders für die Neuauswahl eines Verwalters. Capital / IVA legt den Schwerpunkt auf den Beratungsprozess. <span style="color:var(--grey); font-size:12px;">● = hoch &nbsp;○ = niedrig</span>
+  </div>
+
+  <div class="slide-footer">
+    <div class="footer-brand">firstfive AG · Frankfurt am Main</div>
+    <div class="footer-note">Quellen: firstfive.com · elitereport.de · fuchs-richter.de · capital.de</div>
+  </div>
+</section>
+
+
+<script>
+// ═══════════════════════════════════════
+// REGISTER DATALABELS PLUGIN
+// ═══════════════════════════════════════
+Chart.register(ChartDataLabels);
+
+// ═══════════════════════════════════════
+// SHARPE CHART – improved with clear differences + data labels
+// ═══════════════════════════════════════
+const sharpeCtx = document.getElementById('sharpeChart').getContext('2d');
+
+// Custom grouped bar chart with three metrics
+// Verwalter A: Rendite 8.5%, Vol 14.2%, Sharpe 0.46
+// Verwalter B: Rendite 6.2%, Vol 5.8%, Sharpe 0.83  ← winner
+// Verwalter C: Rendite 13.1%, Vol 22.5%, Sharpe 0.50
+new Chart(sharpeCtx, {
+  type: 'bar',
+  data: {
+    labels: ['Verwalter A', 'Verwalter B ★', 'Verwalter C'],
+    datasets: [
+      {
+        label: 'Rendite p.a. (%)',
+        data: [8.5, 6.2, 13.1],
+        backgroundColor: ['rgba(0,88,124,0.75)','rgba(0,88,124,0.75)','rgba(0,88,124,0.75)'],
+        borderColor: 'rgb(0,88,124)',
+        borderWidth: 1,
+        borderRadius: 2,
+      },
+      {
+        label: 'Volatilität (%)',
+        data: [14.2, 5.8, 22.5],
+        backgroundColor: ['rgba(197,185,172,0.9)','rgba(197,185,172,0.9)','rgba(197,185,172,0.9)'],
+        borderColor: 'rgb(160,148,135)',
+        borderWidth: 1,
+        borderRadius: 2,
+      },
+      {
+        label: 'Sharpe Ratio',
+        data: [0.46, 0.83, 0.50],
+        backgroundColor: [
+          'rgba(230,30,30,0.45)',
+          'rgba(230,30,30,1)',
+          'rgba(230,30,30,0.45)'
+        ],
+        borderColor: 'rgb(230,30,30)',
+        borderWidth: 1,
+        borderRadius: 2,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        labels: { color: '#404040', font: { size: 11, family: 'EB Garamond' }, boxWidth: 12, padding: 12 }
+      },
+      datalabels: {
+        anchor: 'end',
+        align: 'end',
+        offset: 2,
+        font: { size: 10, weight: 'bold', family: 'Oswald' },
+        color: function(ctx) {
+          if (ctx.datasetIndex === 2) return 'rgb(180,20,20)';
+          if (ctx.datasetIndex === 1) return 'rgb(100,80,60)';
+          return 'rgb(0,60,90)';
+        },
+        formatter: function(val, ctx) {
+          if (ctx.datasetIndex === 2) return val.toFixed(2);
+          return val.toFixed(1);
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: function(ctx) {
+            return ctx.index === 1 ? 'rgb(230,30,30)' : '#404040';
+          },
+          font: { size: 11, family: 'Oswald' }
+        },
+        grid: { color: 'rgba(197,185,172,0.4)' }
+      },
+      y: {
+        max: 28,
+        ticks: { color: '#404040', font: { size: 11 } },
+        grid: { color: 'rgba(197,185,172,0.4)' }
+      }
+    },
+    layout: { padding: { top: 22 } }
+  }
+});
+
+// ═══════════════════════════════════════
+// RESULTS CHART 2026
+// ═══════════════════════════════════════
+const resCtx = document.getElementById('resultsChart').getContext('2d');
+new Chart(resCtx, {
+  type: 'bar',
+  data: {
+    labels: ['M.M. Warburg (36M)', 'M.M. Warburg (60M)', 'Bankhaus Bauer (12M)'],
+    datasets: [{
+      label: 'Wertung',
+      data: [100, 95, 88],
+      backgroundColor: ['rgb(230,30,30)', 'rgb(0,88,124)', 'rgb(64,64,64)'],
+      borderWidth: 0,
+      borderRadius: 2,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      datalabels: {
+        anchor: 'end',
+        align: 'end',
+        font: { size: 11, weight: 'bold', family: 'Oswald' },
+        color: '#404040',
+        formatter: val => val + ' Pkt.'
+      }
+    },
+    scales: {
+      x: {
+        max: 120,
+        ticks: { color: '#404040', font: { size: 11 } },
+        grid: { color: 'rgba(197,185,172,0.5)' }
+      },
+      y: {
+        ticks: { color: '#000', font: { size: 11 } },
+        grid: { display: false }
+      }
+    },
+    layout: { padding: { right: 20 } }
+  }
+});
+
+// ═══════════════════════════════════════
+// NAVIGATION LOGIC
+// ═══════════════════════════════════════
+const SLIDES = ['slide-0','slide-1','slide-2','slide-3'];
+let currentSlide = 0;
+
+function goToSlide(n) {
+  n = Math.max(0, Math.min(SLIDES.length - 1, n));
+  currentSlide = n;
+  document.getElementById(SLIDES[n]).scrollIntoView({ behavior: 'smooth' });
+  updateNav();
+}
+
+function updateNav() {
+  // nav links
+  document.querySelectorAll('.nav-link').forEach((el, i) => {
+    el.classList.toggle('active', i === currentSlide);
+  });
+  // counter
+  document.getElementById('slide-counter').textContent = `${currentSlide + 1} / ${SLIDES.length}`;
+  // arrows
+  document.getElementById('btn-up').disabled = currentSlide === 0;
+  document.getElementById('btn-down').disabled = currentSlide === SLIDES.length - 1;
+}
+
+// Arrow buttons
+document.getElementById('btn-up').addEventListener('click', () => goToSlide(currentSlide - 1));
+document.getElementById('btn-down').addEventListener('click', () => goToSlide(currentSlide + 1));
+
+// Nav links
+document.querySelectorAll('.nav-link').forEach(el => {
+  el.addEventListener('click', () => goToSlide(parseInt(el.getAttribute('data-slide'))));
+});
+
+// Keyboard: Arrow keys + PageUp/PageDown + F-keys (F1-F4)
+document.addEventListener('keydown', e => {
+  switch(e.key) {
+    case 'ArrowDown':
+    case 'PageDown':
+      e.preventDefault();
+      goToSlide(currentSlide + 1);
+      break;
+    case 'ArrowUp':
+    case 'PageUp':
+      e.preventDefault();
+      goToSlide(currentSlide - 1);
+      break;
+    case 'F1': e.preventDefault(); goToSlide(0); break;
+    case 'F2': e.preventDefault(); goToSlide(1); break;
+    case 'F3': e.preventDefault(); goToSlide(2); break;
+    case 'F4': e.preventDefault(); goToSlide(3); break;
+    case '1': goToSlide(0); break;
+    case '2': goToSlide(1); break;
+    case '3': goToSlide(2); break;
+    case '4': goToSlide(3); break;
+  }
+});
+
+// Intersection observer to sync nav with scroll
+const slideEls = SLIDES.map(id => document.getElementById(id));
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      currentSlide = slideEls.indexOf(e.target);
+      updateNav();
+    }
+  });
+}, { threshold: 0.45 });
+slideEls.forEach(el => obs.observe(el));
+
+// Init
+updateNav();
+</script>
+</body>
+</html>
