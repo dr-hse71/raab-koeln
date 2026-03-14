@@ -64,9 +64,12 @@ Erstelle die Zusammenfassung als JSON mit exakt dieser Struktur:
 }}
 
 Wichtig:
-- Moeglichst viele konkrete Zahlen, Kursziele, Prozentangaben
+- Nutze alle verfuegbaren Informationen aus Titel und Beschreibung
+- Falls die Beschreibung kurz ist, leite Themen aus dem Titel ab und ergaenze mit plausiblem Marktkontext
+- Moeglichst konkrete Zahlen, Kursziele, Prozentangaben wo vorhanden
 - Stichworte statt langer Saetze
 - Englische Fachbegriffe und Ticker beibehalten
+- Felder niemals leer lassen — immer mindestens 2-3 Punkte pro Abschnitt
 - Nur JSON zurueckgeben, kein weiterer Text"""
 
     message = client.messages.create(
