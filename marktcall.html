@@ -3,159 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MRKT Call — 12. March 2026</title>
+    <title>MRKT Call &mdash; 12. March 2026</title>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-        :root {
-            --ink: #181818;
-            --muted: #999;
-            --faint: #ccc;
-            --accent: #b8966e;
-            --bg: #f9f8f6;
-            --line: #e9e5e0;
-        }
-
-        body {
-            font-family: 'Jost', sans-serif;
-            font-weight: 300;
-            background: var(--bg);
-            color: var(--ink);
-            min-height: 100vh;
-        }
-
-        header {
-            padding: 2.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--line);
-        }
-
-        .back-link {
-            font-size: 0.72rem;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: #888;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
+        :root { --ink: #181818; --accent: #b8966e; --bg: #f9f8f6; --line: #e9e5e0; }
+        body { font-family: 'Jost', sans-serif; font-weight: 300; background: var(--bg); color: var(--ink); min-height: 100vh; }
+        header { padding: 2.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); }
+        .back-link { font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: #888; text-decoration: none; transition: color 0.2s; }
         .back-link:hover { color: var(--accent); }
-
-        .brand {
-            font-size: 0.72rem;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: #aaa;
-        }
-
-        main {
-            max-width: 680px;
-            margin: 0 auto;
-            padding: 4rem 2rem 6rem;
-        }
-
-        .meta {
-            font-size: 0.72rem;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: #888;
-            margin-bottom: 1rem;
-        }
-
-        h1 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: clamp(1.8rem, 5vw, 2.8rem);
-            font-weight: 300;
-            line-height: 1.2;
-            color: var(--ink);
-            margin-bottom: 0.75rem;
-        }
-
-        .divider {
-            width: 28px;
-            height: 1px;
-            background: var(--accent);
-            margin: 2rem 0;
-        }
-
-        .video-link {
-            display: inline-block;
-            font-size: 0.72rem;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--accent);
-            text-decoration: none;
-            border-bottom: 1px solid var(--accent);
-            padding-bottom: 0.1rem;
-            margin-bottom: 3rem;
-            transition: opacity 0.2s;
-        }
+        .brand { font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: #aaa; }
+        main { max-width: 680px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+        .meta { font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: #888; margin-bottom: 1rem; }
+        h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 300; line-height: 1.2; color: var(--ink); margin-bottom: 0.75rem; }
+        .divider { width: 28px; height: 1px; background: var(--accent); margin: 2rem 0; }
+        .video-link { display: inline-block; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent); padding-bottom: 0.1rem; margin-bottom: 2rem; transition: opacity 0.2s; }
         .video-link:hover { opacity: 0.6; }
-
-        .section-label {
-            font-size: 0.72rem;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: #888;
-            margin: 2.5rem 0 0.75rem;
-            border-top: 1px solid var(--line);
-            padding-top: 1.5rem;
-        }
-        .section-label:first-child { border-top: none; padding-top: 0; }
-
-        .summary p {
-            font-size: 0.95rem;
-            line-height: 1.85;
-            color: #444;
-            margin-bottom: 0.6rem;
-        }
-
-        .summary strong {
-            font-weight: 400;
-            color: var(--ink);
-        }
-
-        footer {
-            text-align: center;
-            padding: 2.5rem;
-            border-top: 1px solid var(--line);
-            font-size: 0.72rem;
-            letter-spacing: 0.12em;
-            color: #bbb;
-        }
+        .ueberblick { font-size: 1.05rem; line-height: 1.8; color: #555; margin-bottom: 0.5rem; }
+        .section-label { font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: #888; margin: 2.5rem 0 0.9rem; border-top: 1px solid var(--line); padding-top: 1.5rem; }
+        ul.bullet-list { list-style: none; padding: 0; }
+        ul.bullet-list li { font-size: 1.05rem; line-height: 1.7; color: #444; padding: 0.4rem 0 0.4rem 1.2rem; border-bottom: 1px solid var(--line); position: relative; }
+        ul.bullet-list li:last-child { border-bottom: none; }
+        ul.bullet-list li::before { content: '3'; position: absolute; left: 0; color: var(--accent); }
+        .tab-bar { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem; }
+        .tab-btn { font-family: 'Jost', sans-serif; font-size: 0.72rem; font-weight: 300; letter-spacing: 0.12em; text-transform: uppercase; color: #888; background: none; border: 1px solid var(--line); padding: 0.35rem 0.9rem; cursor: pointer; transition: all 0.2s; }
+        .tab-btn:hover, .tab-btn.active { border-color: var(--accent); color: var(--accent); }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+        .tab-content ul { list-style: none; padding: 0; }
+        .tab-content li { font-size: 1.05rem; line-height: 1.7; color: #444; padding: 0.4rem 0 0.4rem 1.2rem; border-bottom: 1px solid var(--line); position: relative; }
+        .tab-content li:last-child { border-bottom: none; }
+        .tab-content li::before { content: '3'; position: absolute; left: 0; color: var(--accent); }
+        footer { text-align: center; padding: 2.5rem; border-top: 1px solid var(--line); font-size: 0.72rem; letter-spacing: 0.12em; color: #bbb; }
     </style>
 </head>
 <body>
     <header>
-        <a href="/" class="back-link">← raab.koeln</a>
+        <a href="/" class="back-link">&larr; raab.koeln</a>
         <span class="brand">MRKT Call</span>
     </header>
-
     <main>
         <div class="meta">12. March 2026</div>
         <h1>The Market Is Pricing In A Best Case Scenario</h1>
-        <a href="https://www.youtube.com/watch?v=qnYS5r7-Ufs" target="_blank" class="video-link">▶ Video ansehen</a>
+        <a href="https://www.youtube.com/watch?v=qnYS5r7-Ufs" target="_blank" class="video-link">&#9654; Video ansehen</a>
         <div class="divider"></div>
-        <div class="summary">
-            <div class="section-label">Überblick</div>
-<p>In dieser Episode von MRKT Call vom 12. März diskutieren die Hosts Dan Nathan, Guy Adami und Liz Thomas die These, dass der Markt aktuell ein Best-Case-Szenario einpreist. Die Analyse konzentriert sich darauf, ob die derzeitigen Marktbewertungen realistisch sind oder möglicherweise zu optimistische Erwartungen widerspiegeln. Die Episode behandelt die wichtigsten marktbewegenden Schlagzeilen des Tages und bietet konkrete Handelsideen für Investoren.</p>
-<div class="section-label">Marktlage & Sentiment</div>
-<p>Die Hosts bewerten das aktuelle Marktsentiment als übermäßig optimistisch und warnen vor einer möglichen Überbewertung verschiedener Marktsegmente. Sie argumentieren, dass die aktuellen Kursniveaus bereits perfekte Bedingungen voraussetzen und wenig Raum für Enttäuschungen lassen. Das Team betont, dass Investoren vorsichtig sein sollten, da der Markt möglicherweise zu euphorisch auf positive Entwicklungen reagiert hat, ohne ausreichend Risikofaktoren zu berücksichtigen.</p>
-<div class="section-label">Hauptthemen</div>
-<p>Die Episode fokussiert sich auf die Diskrepanz zwischen Markterwartungen und realwirtschaftlichen Fundamentaldaten. Ein zentraler Diskussionspunkt ist die Frage, ob die derzeitige Bewertung nachhaltiger Wachstumstrends oder lediglich spekulativer Übertreibungen entspricht. Die Hosts analysieren verschiedene Wirtschaftsindikatoren und deren Einfluss auf die Marktdynamik, während sie gleichzeitig potenzielle Risikofaktoren identifizieren, die von der Mehrheit der Marktteilnehmer möglicherweise unterschätzt werden.</p>
-<div class="section-label">Aktien & Assets</div>
-<p>Obwohl die Beschreibung keine spezifischen Einzelwerte nennt, liegt der Fokus traditionell auf den wichtigsten Marktindizes wie dem S&P 500 und NASDAQ 100. Die technische Analyse umfasst voraussichtlich Bewertungen führender Technologieaktien und anderer Wachstumstitel, die besonders anfällig für Bewertungskorrekturen sein könnten. Zusätzlich werden wahrscheinlich Rohstoffe und Staatsanleihen als alternative Anlageklassen in die Diskussion einbezogen.</p>
-<div class="section-label">Trade Ideas & Empfehlungen</div>
-<p>Die Handelsempfehlungen konzentrieren sich vermutlich auf defensive Strategien und Absicherungsmaßnahmen, given die skeptische Einschätzung der aktuellen Marktlage. Die Hosts präsentieren wahrscheinlich sowohl Long- als auch Short-Positionen, wobei der Schwerpunkt auf Risk-Management-Strategien liegt. Konkrete Derivate-Strategien und Options-Trades werden voraussichtlich vorgestellt, um von möglichen Marktvolatilitäten zu profitieren oder bestehende Positionen abzusichern.</p>
-<div class="section-label">Ausblick</div>
-<p>Für die kommenden Handelstage erwarten die Hosts eine erhöhte Volatilität und potenzielle Marktkorrekturen, sollten die optimistischen Erwartungen nicht erfüllt werden. Sie betonen die Wichtigkeit, auf verschiedene Szenarien vorbereitet zu sein und warnen vor der Gefahr, dass bereits kleine negative Überraschungen zu überproportionalen Marktreaktionen führen könnten. Das Team rät Investoren, ihre Portfolios kritisch zu überprüfen und gegebenenfalls Risikopositionen zu reduzieren.</p>
-        </div>
-    </main>
+        <p class="ueberblick">Ich kann leider nicht auf YouTube-Videos zugreifen oder deren Inhalte analysieren. Als AI-Assistent habe ich keinen Zugang zu externen Video-Plattformen oder die Möglichkeit, Audio-/Videoinhalte zu transkribieren oder anzusehen.
 
-    <footer>
-        KI-generierte Zusammenfassung &nbsp;·&nbsp; 14.03.2026 &nbsp;·&nbsp; raab.koeln
-    </footer>
+Um Ihnen eine professionelle Finanzanalyse zu erstellen, bräuchte ich:
+
+- Ein Transkript der Episode
+- Schriftliche Zusammenfassung der besprochenen Punkte
+- Konkrete Daten und Zahlen aus der Sendung
+
+Falls Sie mir diese Informationen zur Verfügung stellen können, erstelle ich gerne die gewünschte JSON-Analyse nach Ihren Spezifikationen.</p>
+
+        <div class="section-label">Marktlage</div>
+        <ul class="bullet-list"></ul>
+
+        <div class="section-label">Hauptthemen</div>
+        <div class="tab-bar"></div>
+        <div class="tab-content"></div>
+
+        <div class="section-label">Aktien &amp; Assets</div>
+        <div class="tab-bar"></div>
+        <div class="tab-content"></div>
+
+        <div class="section-label">Trade Ideas</div>
+        <ul class="bullet-list"></ul>
+
+        <div class="section-label">Ausblick</div>
+        <ul class="bullet-list"></ul>
+    </main>
+    <footer>KI-generierte Zusammenfassung &nbsp;&middot;&nbsp; 14.03.2026 &nbsp;&middot;&nbsp; raab.koeln</footer>
+    <script>
+    function switchTab(btn, panelId) {
+        const bar = btn.parentElement;
+        bar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const content = bar.nextElementSibling;
+        content.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(panelId).classList.add('active');
+    }
+    </script>
 </body>
 </html>
