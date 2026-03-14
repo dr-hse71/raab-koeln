@@ -96,7 +96,7 @@ def create_html(title, published, summary, video_url):
             continue
         if line.startswith("**") and line.endswith("**"):
             heading = line.replace("**", "")
-            html_parts.append(f'<h2>{heading}</h2>')
+            html_parts.append(f'<div class="section-label">{heading}</div>')
         else:
             line = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', line)
             html_parts.append(f'<p>{line}</p>')
@@ -109,40 +109,148 @@ def create_html(title, published, summary, video_url):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MRKT Call — {date_str}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
     <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        body {{ background: #0a0e1a; color: #e2e8f0; font-family: 'Georgia', serif; min-height: 100vh; }}
-        header {{ background: #0d1117; border-bottom: 1px solid #1e2d40; padding: 1.5rem 0; }}
-        .header-inner {{ max-width: 860px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; }}
-        .brand {{ font-family: sans-serif; font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: #4a9eff; }}
-        .back-link {{ font-size: 0.8rem; color: #4a6080; text-decoration: none; }}
-        .back-link:hover {{ color: #4a9eff; }}
-        main {{ max-width: 860px; margin: 0 auto; padding: 3rem 2rem 5rem; }}
-        .meta {{ font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: #4a6080; margin-bottom: 0.75rem; font-family: sans-serif; }}
-        h1 {{ font-size: 2rem; font-weight: normal; line-height: 1.3; color: #f0f4f8; margin-bottom: 1rem; }}
-        .video-link {{ display: inline-block; font-size: 0.75rem; font-family: sans-serif; color: #4a9eff; text-decoration: none; border: 1px solid #1e3a5f; padding: 0.4rem 0.9rem; border-radius: 3px; margin-bottom: 2.5rem; }}
-        .video-link:hover {{ background: #1e3a5f; }}
-        hr {{ border: none; border-top: 1px solid #1e2d40; margin-bottom: 2.5rem; }}
-        .summary h2 {{ font-size: 0.7rem; font-family: sans-serif; letter-spacing: 0.18em; text-transform: uppercase; color: #4a9eff; font-weight: normal; margin: 2rem 0 0.75rem; }}
-        .summary p {{ font-size: 1rem; line-height: 1.85; color: #c8d4e0; margin-bottom: 0.5rem; }}
-        footer {{ max-width: 860px; margin: 0 auto; padding: 1.5rem 2rem; border-top: 1px solid #1e2d40; font-size: 0.7rem; font-family: sans-serif; color: #2a3a4a; }}
+        *, *::before, *::after {{ margin: 0; padding: 0; box-sizing: border-box; }}
+
+        :root {{
+            --ink: #181818;
+            --muted: #999;
+            --faint: #ccc;
+            --accent: #b8966e;
+            --bg: #f9f8f6;
+            --line: #e9e5e0;
+        }}
+
+        body {{
+            font-family: 'Jost', sans-serif;
+            font-weight: 300;
+            background: var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+        }}
+
+        header {{
+            padding: 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--line);
+        }}
+
+        .back-link {{
+            font-size: 0.72rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #888;
+            text-decoration: none;
+            transition: color 0.2s;
+        }}
+        .back-link:hover {{ color: var(--accent); }}
+
+        .brand {{
+            font-size: 0.72rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #aaa;
+        }}
+
+        main {{
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 4rem 2rem 6rem;
+        }}
+
+        .meta {{
+            font-size: 0.72rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #888;
+            margin-bottom: 1rem;
+        }}
+
+        h1 {{
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            font-weight: 300;
+            line-height: 1.2;
+            color: var(--ink);
+            margin-bottom: 0.75rem;
+        }}
+
+        .divider {{
+            width: 28px;
+            height: 1px;
+            background: var(--accent);
+            margin: 2rem 0;
+        }}
+
+        .video-link {{
+            display: inline-block;
+            font-size: 0.72rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid var(--accent);
+            padding-bottom: 0.1rem;
+            margin-bottom: 3rem;
+            transition: opacity 0.2s;
+        }}
+        .video-link:hover {{ opacity: 0.6; }}
+
+        .section-label {{
+            font-size: 0.72rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #888;
+            margin: 2.5rem 0 0.75rem;
+            border-top: 1px solid var(--line);
+            padding-top: 1.5rem;
+        }}
+        .section-label:first-child {{ border-top: none; padding-top: 0; }}
+
+        .summary p {{
+            font-size: 0.95rem;
+            line-height: 1.85;
+            color: #444;
+            margin-bottom: 0.6rem;
+        }}
+
+        .summary strong {{
+            font-weight: 400;
+            color: var(--ink);
+        }}
+
+        footer {{
+            text-align: center;
+            padding: 2.5rem;
+            border-top: 1px solid var(--line);
+            font-size: 0.72rem;
+            letter-spacing: 0.12em;
+            color: #bbb;
+        }}
     </style>
 </head>
 <body>
     <header>
-        <div class="header-inner">
-            <span class="brand">MRKT Call · Risk Reversal Media</span>
-            <a href="/" class="back-link">← raab.koeln</a>
-        </div>
+        <a href="/" class="back-link">← raab.koeln</a>
+        <span class="brand">MRKT Call</span>
     </header>
+
     <main>
         <div class="meta">{date_str}</div>
         <h1>{title}</h1>
         <a href="{video_url}" target="_blank" class="video-link">▶ Video ansehen</a>
-        <hr>
-        <div class="summary">{summary_html}</div>
+        <div class="divider"></div>
+        <div class="summary">
+            {summary_html}
+        </div>
     </main>
-    <footer>KI-generierte Zusammenfassung · {datetime.now().strftime("%d.%m.%Y %H:%M")} · raab.koeln</footer>
+
+    <footer>
+        KI-generierte Zusammenfassung &nbsp;·&nbsp; {datetime.now().strftime("%d.%m.%Y")} &nbsp;·&nbsp; raab.koeln
+    </footer>
 </body>
 </html>"""
 
