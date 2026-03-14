@@ -91,6 +91,53 @@
   }
   .contact-row:last-child { border-bottom: none; }
 
+  .section-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #888;
+    margin: 3.5rem 0 1rem;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.8s ease forwards;
+  }
+
+  .content-links {
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.9s ease forwards;
+  }
+
+  .content-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--line);
+    gap: 2rem;
+    text-decoration: none;
+    color: var(--ink);
+    transition: color 0.2s;
+  }
+  .content-row:last-child { border-bottom: none; }
+  .content-row:hover { color: var(--accent); }
+  .content-row:hover .content-title { color: var(--accent); }
+
+  .content-title {
+    font-size: 0.95rem;
+    color: var(--ink);
+    transition: color 0.2s;
+    text-align: left;
+  }
+
+  .content-date {
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    color: #aaa;
+    white-space: nowrap;
+    text-align: right;
+  }
+
   .contact-label {
     font-size: 0.72rem;
     letter-spacing: 0.18em;
@@ -154,6 +201,15 @@
         <a href="https://raab.koeln" class="contact-value">raab.koeln</a>
       </div>
     </div>
+
+    <p class="section-label">Markt</p>
+    <div class="content-links">
+      <a href="/marktcall.html" class="content-row">
+        <span class="content-title">MRKT Call · Risk Reversal</span>
+        <span class="content-date">14. März 2026</span>
+      </a>
+    </div>
+
   </div>
 </main>
 
