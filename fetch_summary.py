@@ -1,5 +1,6 @@
 import os
 import re
+import json
 from datetime import datetime
 from googleapiclient.discovery import build
 import anthropic
@@ -9,45 +10,30 @@ ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
 CHANNEL_HANDLE = "RiskReversalMedia"
 
 def get_channel_id(youtube):
-    response = youtube.channels().list(
-        part="id",
-        forHandle=CHANNEL_HANDLE
-    ).execute()
+    response = youtube.channels().list(part="id", forHandle=CHANNEL_HANDLE).execute()
     return response["items"][0]["id"]
 
 def get_latest_video(youtube, channel_id):
     response = youtube.search().list(
-        part="snippet",
-        channelId=channel_id,
-        order="date",
-        maxResults=5,
-        type="video",
-        q="MRKT Call"
+        part="snippet", channelId=channel_id, order="date",
+        maxResults=5, type="video", q="MRKT Call"
     ).execute()
-
     for item in response["items"]:
         title = item["snippet"]["title"]
-        if any(word in title for word in ["MRKT", "Market", "Tariff", "Stock", "Fed", "Trade"]):
-            video_id = item["id"]["videoId"]
-            published = item["snippet"]["publishedAt"]
-            return video_id, title, published
-
+        if any(w in title for w in ["MRKT", "Market", "Tariff", "Stock", "Fed", "Trade"]):
+            return item["id"]["videoId"], title, item["snippet"]["publishedAt"]
     item = response["items"][0]
     return item["id"]["videoId"], item["snippet"]["title"], item["snippet"]["publishedAt"]
 
 def get_video_description(youtube, video_id):
-    response = youtube.videos().list(
-        part="snippet",
-        id=video_id
-    ).execute()
+    response = youtube.videos().list(part="snippet", id=video_id).execute()
     if response["items"]:
         return response["items"][0]["snippet"]["description"]
     return ""
 
 def summarize_with_claude(title, description, video_url):
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-
-    prompt = f"""Du bist ein professioneller Finanzanalyst. Basierend auf dem Titel und der Beschreibung der folgenden MRKT Call Episode, erstelle eine ausführliche und strukturierte Zusammenfassung auf Deutsch.
+    prompt = f"""Du bist ein professioneller Finanzanalyst bei einer deutschen Privatbank. Analysiere die folgende MRKT Call Episode und erstelle eine faktenreiche Zusammenfassung auf Deutsch.
 
 TITEL: {title}
 VIDEO URL: {video_url}
@@ -55,27 +41,33 @@ VIDEO URL: {video_url}
 BESCHREIBUNG:
 {description}
 
-Erstelle eine professionelle Zusammenfassung mit folgenden Abschnitten als Fließtext:
+Erstelle die Zusammenfassung als JSON mit exakt dieser Struktur:
+{{
+  "ueberblick": "2-3 praegnante Saetze zum zentralen Thema der Episode",
+  "marktlage": [
+    "Stichpunkt mit konkreter Zahl oder Fakt",
+    "weitere Stichpunkte..."
+  ],
+  "hauptthemen": [
+    {{"titel": "Thema 1", "punkte": ["Stichpunkt mit Fakten", "Stichpunkt"]}},
+    {{"titel": "Thema 2", "punkte": ["Stichpunkt", "Stichpunkt"]}}
+  ],
+  "aktien_assets": [
+    {{"name": "Ticker/Name", "punkte": ["Konkrete Aussage", "Kurs/Ziel falls genannt"]}}
+  ],
+  "trade_ideas": [
+    "Konkrete Handelsidee mit Begruendung"
+  ],
+  "ausblick": [
+    "Konkreter Ausblick-Punkt"
+  ]
+}}
 
-**Überblick**
-Was ist das zentrale Thema dieser Episode?
-
-**Marktlage & Sentiment**
-Wie beurteilen die Hosts die aktuelle Marktlage?
-
-**Hauptthemen**
-Welche konkreten Themen werden besprochen?
-
-**Aktien & Assets**
-Welche Werte oder Sektoren werden erwähnt?
-
-**Trade Ideas & Empfehlungen**
-Welche Handelsideen werden genannt?
-
-**Ausblick**
-Was erwarten die Hosts für die kommenden Tage?
-
-Schreibe professionell auf Deutsch. Behalte englische Fachbegriffe bei."""
+Wichtig:
+- Moeglichst viele konkrete Zahlen, Kursziele, Prozentangaben
+- Stichworte statt langer Saetze
+- Englische Fachbegriffe und Ticker beibehalten
+- Nur JSON zurueckgeben, kein weiterer Text"""
 
     message = client.messages.create(
         model="claude-sonnet-4-20250514",
@@ -84,173 +76,120 @@ Schreibe professionell auf Deutsch. Behalte englische Fachbegriffe bei."""
     )
     return message.content[0].text
 
+def li(items):
+    return "\n".join([f"<li>{i}</li>" for i in items])
+
 def create_html(title, published, summary, video_url):
     date_obj = datetime.fromisoformat(published.replace("Z", "+00:00"))
     date_str = date_obj.strftime("%d. %B %Y")
+    now_str = datetime.now().strftime("%d.%m.%Y")
 
-    lines = summary.split("\n")
-    html_parts = []
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        if line.startswith("**") and line.endswith("**"):
-            heading = line.replace("**", "")
-            html_parts.append(f'<div class="section-label">{heading}</div>')
-        else:
-            line = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', line)
-            html_parts.append(f'<p>{line}</p>')
+    clean = re.sub(r"```json|```", "", summary.strip()).strip()
+    try:
+        data = json.loads(clean)
+    except Exception:
+        data = {"ueberblick": summary, "marktlage": [], "hauptthemen": [], "aktien_assets": [], "trade_ideas": [], "ausblick": []}
 
-    summary_html = "\n".join(html_parts)
+    # Hauptthemen Tabs
+    themen_tabs = ""
+    themen_panels = ""
+    for i, t in enumerate(data.get("hauptthemen", [])):
+        active = "active" if i == 0 else ""
+        themen_tabs += f'<button class="tab-btn {active}" onclick="switchTab(this,\'thema-{i}\')">{t["titel"]}</button>\n'
+        themen_panels += f'<div id="thema-{i}" class="tab-panel {active}"><ul>{li(t["punkte"])}</ul></div>\n'
+
+    # Aktien Tabs
+    aktien_tabs = ""
+    aktien_panels = ""
+    for i, a in enumerate(data.get("aktien_assets", [])):
+        active = "active" if i == 0 else ""
+        aktien_tabs += f'<button class="tab-btn {active}" onclick="switchTab(this,\'aktie-{i}\')">{a["name"]}</button>\n'
+        aktien_panels += f'<div id="aktie-{i}" class="tab-panel {active}"><ul>{li(a["punkte"])}</ul></div>\n'
+
+    ueberblick = data.get("ueberblick", "")
+    marktlage_html = li(data.get("marktlage", []))
+    trade_html = li(data.get("trade_ideas", []))
+    ausblick_html = li(data.get("ausblick", []))
 
     return f"""<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MRKT Call — {date_str}</title>
+    <title>MRKT Call &mdash; {date_str}</title>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after {{ margin: 0; padding: 0; box-sizing: border-box; }}
-
-        :root {{
-            --ink: #181818;
-            --muted: #999;
-            --faint: #ccc;
-            --accent: #b8966e;
-            --bg: #f9f8f6;
-            --line: #e9e5e0;
-        }}
-
-        body {{
-            font-family: 'Jost', sans-serif;
-            font-weight: 300;
-            background: var(--bg);
-            color: var(--ink);
-            min-height: 100vh;
-        }}
-
-        header {{
-            padding: 2.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--line);
-        }}
-
-        .back-link {{
-            font-size: 0.72rem;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: #888;
-            text-decoration: none;
-            transition: color 0.2s;
-        }}
+        :root {{ --ink: #181818; --accent: #b8966e; --bg: #f9f8f6; --line: #e9e5e0; }}
+        body {{ font-family: 'Jost', sans-serif; font-weight: 300; background: var(--bg); color: var(--ink); min-height: 100vh; }}
+        header {{ padding: 2.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); }}
+        .back-link {{ font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: #888; text-decoration: none; transition: color 0.2s; }}
         .back-link:hover {{ color: var(--accent); }}
-
-        .brand {{
-            font-size: 0.72rem;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: #aaa;
-        }}
-
-        main {{
-            max-width: 680px;
-            margin: 0 auto;
-            padding: 4rem 2rem 6rem;
-        }}
-
-        .meta {{
-            font-size: 0.72rem;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: #888;
-            margin-bottom: 1rem;
-        }}
-
-        h1 {{
-            font-family: 'Cormorant Garamond', serif;
-            font-size: clamp(1.8rem, 5vw, 2.8rem);
-            font-weight: 300;
-            line-height: 1.2;
-            color: var(--ink);
-            margin-bottom: 0.75rem;
-        }}
-
-        .divider {{
-            width: 28px;
-            height: 1px;
-            background: var(--accent);
-            margin: 2rem 0;
-        }}
-
-        .video-link {{
-            display: inline-block;
-            font-size: 0.72rem;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--accent);
-            text-decoration: none;
-            border-bottom: 1px solid var(--accent);
-            padding-bottom: 0.1rem;
-            margin-bottom: 3rem;
-            transition: opacity 0.2s;
-        }}
+        .brand {{ font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: #aaa; }}
+        main {{ max-width: 680px; margin: 0 auto; padding: 4rem 2rem 6rem; }}
+        .meta {{ font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: #888; margin-bottom: 1rem; }}
+        h1 {{ font-family: 'Cormorant Garamond', serif; font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 300; line-height: 1.2; color: var(--ink); margin-bottom: 0.75rem; }}
+        .divider {{ width: 28px; height: 1px; background: var(--accent); margin: 2rem 0; }}
+        .video-link {{ display: inline-block; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent); padding-bottom: 0.1rem; margin-bottom: 2rem; transition: opacity 0.2s; }}
         .video-link:hover {{ opacity: 0.6; }}
-
-        .section-label {{
-            font-size: 0.72rem;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
-            color: #888;
-            margin: 2.5rem 0 0.75rem;
-            border-top: 1px solid var(--line);
-            padding-top: 1.5rem;
-        }}
-        .section-label:first-child {{ border-top: none; padding-top: 0; }}
-
-        .summary p {{
-            font-size: 0.95rem;
-            line-height: 1.85;
-            color: #444;
-            margin-bottom: 0.6rem;
-        }}
-
-        .summary strong {{
-            font-weight: 400;
-            color: var(--ink);
-        }}
-
-        footer {{
-            text-align: center;
-            padding: 2.5rem;
-            border-top: 1px solid var(--line);
-            font-size: 0.72rem;
-            letter-spacing: 0.12em;
-            color: #bbb;
-        }}
+        .ueberblick {{ font-size: 1.05rem; line-height: 1.8; color: #555; margin-bottom: 0.5rem; }}
+        .section-label {{ font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: #888; margin: 2.5rem 0 0.9rem; border-top: 1px solid var(--line); padding-top: 1.5rem; }}
+        ul.bullet-list {{ list-style: none; padding: 0; }}
+        ul.bullet-list li {{ font-size: 1.05rem; line-height: 1.7; color: #444; padding: 0.4rem 0 0.4rem 1.2rem; border-bottom: 1px solid var(--line); position: relative; }}
+        ul.bullet-list li:last-child {{ border-bottom: none; }}
+        ul.bullet-list li::before {{ content: '\2013'; position: absolute; left: 0; color: var(--accent); }}
+        .tab-bar {{ display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem; }}
+        .tab-btn {{ font-family: 'Jost', sans-serif; font-size: 0.72rem; font-weight: 300; letter-spacing: 0.12em; text-transform: uppercase; color: #888; background: none; border: 1px solid var(--line); padding: 0.35rem 0.9rem; cursor: pointer; transition: all 0.2s; }}
+        .tab-btn:hover, .tab-btn.active {{ border-color: var(--accent); color: var(--accent); }}
+        .tab-panel {{ display: none; }}
+        .tab-panel.active {{ display: block; }}
+        .tab-content ul {{ list-style: none; padding: 0; }}
+        .tab-content li {{ font-size: 1.05rem; line-height: 1.7; color: #444; padding: 0.4rem 0 0.4rem 1.2rem; border-bottom: 1px solid var(--line); position: relative; }}
+        .tab-content li:last-child {{ border-bottom: none; }}
+        .tab-content li::before {{ content: '\2013'; position: absolute; left: 0; color: var(--accent); }}
+        footer {{ text-align: center; padding: 2.5rem; border-top: 1px solid var(--line); font-size: 0.72rem; letter-spacing: 0.12em; color: #bbb; }}
     </style>
 </head>
 <body>
     <header>
-        <a href="/" class="back-link">← raab.koeln</a>
+        <a href="/" class="back-link">&larr; raab.koeln</a>
         <span class="brand">MRKT Call</span>
     </header>
-
     <main>
         <div class="meta">{date_str}</div>
         <h1>{title}</h1>
-        <a href="{video_url}" target="_blank" class="video-link">▶ Video ansehen</a>
+        <a href="{video_url}" target="_blank" class="video-link">&#9654; Video ansehen</a>
         <div class="divider"></div>
-        <div class="summary">
-            {summary_html}
-        </div>
-    </main>
+        <p class="ueberblick">{ueberblick}</p>
 
-    <footer>
-        KI-generierte Zusammenfassung &nbsp;·&nbsp; {datetime.now().strftime("%d.%m.%Y")} &nbsp;·&nbsp; raab.koeln
-    </footer>
+        <div class="section-label">Marktlage</div>
+        <ul class="bullet-list">{marktlage_html}</ul>
+
+        <div class="section-label">Hauptthemen</div>
+        <div class="tab-bar">{themen_tabs}</div>
+        <div class="tab-content">{themen_panels}</div>
+
+        <div class="section-label">Aktien &amp; Assets</div>
+        <div class="tab-bar">{aktien_tabs}</div>
+        <div class="tab-content">{aktien_panels}</div>
+
+        <div class="section-label">Trade Ideas</div>
+        <ul class="bullet-list">{trade_html}</ul>
+
+        <div class="section-label">Ausblick</div>
+        <ul class="bullet-list">{ausblick_html}</ul>
+    </main>
+    <footer>KI-generierte Zusammenfassung &nbsp;&middot;&nbsp; {now_str} &nbsp;&middot;&nbsp; raab.koeln</footer>
+    <script>
+    function switchTab(btn, panelId) {{
+        const bar = btn.parentElement;
+        bar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const content = bar.nextElementSibling;
+        content.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(panelId).classList.add('active');
+    }}
+    </script>
 </body>
 </html>"""
 
