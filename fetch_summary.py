@@ -7,7 +7,7 @@ import anthropic
 
 YOUTUBE_API_KEY = os.environ["YOUTUBE_API_KEY"]
 ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
-CHANNEL_HANDLE = "RiskReversalMedia"
+CHANNEL_HANDLE = "RiskReversalMedia"  # v2 dashboard layout
 
 def get_channel_id(youtube):
     response = youtube.channels().list(part="id", forHandle=CHANNEL_HANDLE).execute()
