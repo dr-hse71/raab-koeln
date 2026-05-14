@@ -2,7 +2,7 @@ name: Daily MRKT Call Summary
 
 on:
   schedule:
-    - cron: '0 20 * * 1-4'  # Mo-Do um 21 Uhr deutscher Zeit (20 Uhr UTC)
+#    - cron: '0 20 * * 1-4'  # Mo-Do um 21 Uhr deutscher Zeit (20 Uhr UTC)
   workflow_dispatch:          # Manuell auslösbar
 
 jobs:
