@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dividendenstrategie — Grundlagen</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange: #FF6B35;
+    --orange-light: #FFF0EB;
+    --orange-border: #FFCFBC;
+    --orange-dark: #C94B18;
+    --yellow: #FFCC02;
+    --yellow-light: #FFFBE6;
+    --yellow-border: #FFE566;
+    --yellow-dark: #997300;
+    --teal: #00C9B8;
+    --teal-light: #E6FAF9;
+    --teal-border: #9AE6E1;
+    --teal-dark: #0B7A72;
+    --ink: #1A1A2E;
+    --ink-mid: #3D3D5C;
+    --muted: #6B7280;
+    --muted-light: #9CA3AF;
+    --border: #E8E8E8;
+    --bg: #FFFFFF;
+    --bg-soft: #FAFAFA;
+  }
+
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+    background: #EDEDED;
+    color: var(--ink);
+    font-size: clamp(12px, 1.1vw, 15px);
+  }
+
+  /* ── LAYOUT ── */
+  .shell {
+    width: 100vw; height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start;
+    padding: clamp(12px, 1.5vh, 24px) clamp(12px, 2vw, 32px) 0;
+  }
+
+  /* ── TAB BAR ── */
+  .tab-bar-wrap {
+    width: 100%; max-width: 1200px;
+    overflow-x: auto; scrollbar-width: none; flex-shrink: 0;
+  }
+  .tab-bar-wrap::-webkit-scrollbar { display: none; }
+
+  .tab-bar {
+    display: flex;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    overflow: hidden;
+    min-width: max-content;
+    width: 100%;
+    height: 52px;
+  }
+
+  .tab {
+    flex: 1; height: 100%;
+    padding: 0 4px;
+    font-size: clamp(9px, 0.8vw, 11px);
+    font-weight: 500;
+    color: var(--muted-light);
+    text-align: center;
+    cursor: pointer;
+    border-right: 1px solid var(--border);
+    transition: all 0.18s;
+    white-space: nowrap;
+    line-height: 1.2;
+    position: relative;
+    user-select: none;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .tab:last-child { border-right: none; }
+  .tab:hover { color: var(--orange); background: var(--orange-light); }
+  .tab.active {
+    color: var(--orange-dark);
+    background: var(--orange-light);
+    font-weight: 600;
+  }
+  .tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--orange);
+  }
+  .tab-num {
+    display: block;
+    font-size: 9px;
+    color: var(--muted-light);
+    margin-bottom: 2px;
+    font-weight: 400;
+  }
+  .tab.active .tab-num { color: var(--orange); }
+
+  /* ── SLIDE CARD ── */
+  .slide-card {
+    width: 100%; max-width: 1200px;
+    flex: 1; min-height: 0;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 0 0 12px 12px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: clamp(8px, 1vh, 16px);
+    display: flex; flex-direction: column;
+  }
+
+  .accent-bar { flex-shrink: 0; }
+
+  .accent-bar {
+    height: 4px;
+    background: linear-gradient(90deg, var(--orange) 0%, var(--yellow) 55%, var(--teal) 100%);
+  }
+  /* ── SLIDES ── */
+  .slide {
+    display: none;
+    flex: 1; min-height: 0;
+    padding: clamp(20px, 3vh, 44px) clamp(24px, 4vw, 64px) clamp(52px, 7vh, 72px);
+    overflow-y: auto;
+    animation: fadeIn 0.22s ease;
+  }
+  .slide.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── TYPOGRAPHY ── */
+  .slide-tag {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--orange);
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+  h1.display {
+    font-family: 'Playfair Display', serif;
+    font-size: 44px;
+    font-weight: 500;
+    line-height: 1.15;
+    color: var(--ink);
+    margin-bottom: 18px;
+  }
+  h1.display em { font-style: normal; color: var(--orange); }
+  h2.section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 2.6vw, 36px);
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--ink);
+    margin-bottom: 16px;
+  }
+  h2.section-title em { font-style: normal; color: var(--orange); }
+  .lead {
+    font-size: clamp(12px, 1.1vw, 15px);
+    color: var(--muted);
+    line-height: 1.75;
+    max-width: 560px;
+    font-weight: 300;
+    margin-bottom: 36px;
+  }
+  .body-text {
+    font-size: 14px;
+    color: var(--ink-mid);
+    line-height: 1.75;
+    margin-bottom: 12px;
+  }
+
+  /* ── STAT ROW ── */
+  .stat-row {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 500px;
+    margin-bottom: 36px;
+  }
+  .stat-cell {
+    flex: 1;
+    padding: 20px 22px;
+    border-right: 1px solid var(--border);
+  }
+  .stat-cell:last-child { border-right: none; }
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1;
+    display: block;
+  }
+  .stat-label { font-size: 11px; color: var(--muted-light); margin-top: 5px; display: block; line-height: 1.4; }
+  .orange-num { color: var(--orange); }
+  .yellow-num { color: var(--yellow-dark); }
+  .teal-num   { color: var(--teal-dark); }
+
+  /* ── PILLS ── */
+  .pills { display: flex; gap: 10px; flex-wrap: wrap; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 100px; padding: 7px 16px;
+    font-size: 12px; font-weight: 500;
+  }
+  .pill.orange { background: var(--orange-light); color: var(--orange-dark); border: 0.5px solid var(--orange-border); }
+  .pill.teal   { background: var(--teal-light);   color: var(--teal-dark);   border: 0.5px solid var(--teal-border); }
+  .pill.yellow { background: var(--yellow-light);  color: var(--yellow-dark); border: 0.5px solid var(--yellow-border); }
+
+  /* ── TWO-COL ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+
+  /* ── CARDS ── */
+  .card {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    background: var(--bg);
+  }
+  .card.orange-accent { border-top: 3px solid var(--orange); }
+  .card.teal-accent   { border-top: 3px solid var(--teal); }
+  .card.yellow-accent { border-top: 3px solid var(--yellow); }
+  .card-label {
+    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    font-weight: 600; margin-bottom: 10px;
+  }
+  .card-label.orange { color: var(--orange); }
+  .card-label.teal   { color: var(--teal-dark); }
+  .card-label.yellow { color: var(--yellow-dark); }
+  .card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px; font-weight: 500;
+    margin-bottom: 12px; color: var(--ink);
+  }
+  .card p { font-size: 13px; color: var(--muted); line-height: 1.7; margin-bottom: 10px; }
+  .card ul { list-style: none; padding: 0; }
+  .card ul li {
+    font-size: 13px; color: var(--ink-mid);
+    padding: 6px 0; border-bottom: 0.5px solid var(--border);
+    display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
+  }
+  .card ul li:last-child { border-bottom: none; }
+  .card ul li::before { content: '→'; color: var(--orange); font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── COMPARE CARDS ── */
+  .compare-card {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    background: var(--bg-soft);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .compare-card:hover, .compare-card.open {
+    background: #fff;
+    border-color: var(--orange);
+    box-shadow: 0 4px 24px rgba(255,107,53,0.08);
+  }
+  .compare-card .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 500; margin-bottom: 6px;
+  }
+  .compare-card .card-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .compare-card .detail { display: none; }
+  .compare-card.open .detail { display: block; }
+  .compare-card .hint { font-size: 11px; color: var(--muted-light); margin-top: 12px; }
+  .compare-card.open .hint { display: none; }
+  .detail-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 7px 0; border-bottom: 0.5px solid var(--border);
+    font-size: 13px;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-row .dl { color: var(--muted); }
+  .detail-row .dv { font-weight: 500; color: var(--ink); }
+
+  /* ── WATERFALL ── */
+  .waterfall { display: flex; flex-direction: column; gap: 0; max-width: 560px; }
+  .wf-step {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px 0;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .wf-step:last-child { border-bottom: none; }
+  .wf-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .wf-icon.orange { background: var(--orange-light); }
+  .wf-icon.yellow { background: var(--yellow-light); }
+  .wf-icon.teal   { background: var(--teal-light); }
+  .wf-icon.green  { background: #E6FAF0; }
+  .wf-title { font-size: 15px; font-weight: 500; color: var(--ink); }
+  .wf-desc  { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+  .wf-arrow { font-size: 20px; color: var(--border); margin-left: 4px; }
+
+  /* ── ARISTOCRATS ── */
+  .aristocrat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
+  .a-card {
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 18px; background: var(--bg-soft);
+  }
+  .a-card .co { font-weight: 500; font-size: 14px; color: var(--ink); }
+  .a-card .yrs {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; color: var(--orange); font-weight: 500;
+    line-height: 1; margin: 6px 0 2px;
+  }
+  .a-card .yrs-label { font-size: 10px; color: var(--muted-light); }
+  .a-card .sector { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+  /* ── INTERACTIVE: ZINSESZINS ── */
+  .slider-group { margin-bottom: 24px; }
+  .slider-label {
+    display: flex; justify-content: space-between;
+    font-size: 13px; margin-bottom: 8px;
+  }
+  .slider-label span:first-child { color: var(--muted); }
+  .slider-label span:last-child { font-weight: 600; color: var(--ink); }
+  input[type=range] {
+    width: 100%; height: 4px; border-radius: 2px;
+    appearance: none; background: var(--border); outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    appearance: none; width: 18px; height: 18px; border-radius: 50%;
+    background: var(--orange); border: 2px solid #fff;
+    box-shadow: 0 0 0 1px var(--orange);
+  }
+
+  .zins-result {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    margin: 24px 0;
+  }
+  .zins-box {
+    border-radius: 12px; padding: 20px 22px;
+  }
+  .zins-box.reinvest { background: var(--orange-light); border: 1px solid var(--orange-border); }
+  .zins-box.entnommen { background: var(--bg-soft); border: 1px solid var(--border); }
+  .zins-box .zb-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .zins-box.reinvest .zb-label { color: var(--orange-dark); }
+  .zins-box.entnommen .zb-label { color: var(--muted); }
+  .zins-box .zb-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 30px; font-weight: 500; line-height: 1;
+  }
+  .zins-box.reinvest .zb-val { color: var(--orange); }
+  .zins-box.entnommen .zb-val { color: var(--ink); }
+  .zins-box .zb-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .chart-area {
+    height: 200px; position: relative;
+    margin-top: 8px;
+  }
+  canvas { width: 100% !important; }
+
+  /* ── RECHNER ── */
+  .rechner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .input-group { margin-bottom: 20px; }
+  .input-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 500; display: block; }
+  .input-field {
+    width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 15px; font-family: 'DM Sans', sans-serif;
+    color: var(--ink); outline: none; transition: border 0.15s;
+  }
+  .input-field:focus { border-color: var(--orange); }
+  .rechner-output { background: var(--bg-soft); border-radius: 14px; padding: 28px; border: 1px solid var(--border); }
+  .ro-line {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 10px 0; border-bottom: 0.5px solid var(--border);
+    font-size: 14px;
+  }
+  .ro-line:last-child { border-bottom: none; }
+  .ro-line .rl { color: var(--muted); }
+  .ro-line .rv { font-weight: 600; color: var(--ink); font-size: 16px; }
+  .ro-line .rv.highlight { color: var(--orange); font-size: 20px; font-family: 'Playfair Display', serif; }
+
+  /* ── TECH COMPARE ── */
+  .tech-table { width: 100%; border-collapse: collapse; margin-bottom: 28px; }
+  .tech-table th {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--muted-light); font-weight: 500;
+    padding: 8px 16px; border-bottom: 1px solid var(--border); text-align: left;
+  }
+  .tech-table td {
+    padding: 14px 16px; font-size: 14px; border-bottom: 0.5px solid var(--border);
+    color: var(--ink-mid);
+  }
+  .tech-table tr:last-child td { border-bottom: none; }
+  .tech-table .co-name { font-weight: 500; color: var(--ink); }
+  .tech-table .low-div { color: var(--muted-light); font-style: italic; }
+  .tech-table .high-div { color: var(--teal-dark); font-weight: 600; }
+  .tech-table .category-div { background: var(--orange-light); color: var(--orange-dark); border-radius: 6px; padding: 3px 10px; font-size: 12px; font-weight: 500; display: inline-block; }
+  .tech-table .category-growth { background: var(--bg-soft); color: var(--muted); border-radius: 6px; padding: 3px 10px; font-size: 12px; font-weight: 500; display: inline-block; border: 0.5px solid var(--border); }
+
+  /* ── DIVERSIFIKATION ── */
+  .sector-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+  .sector-card {
+    border-radius: 10px; padding: 14px 16px;
+    border: 1px solid var(--border); background: var(--bg-soft);
+  }
+  .sector-card .sc-icon { font-size: 22px; margin-bottom: 6px; display: block; }
+  .sector-card .sc-name { font-size: 13px; font-weight: 500; color: var(--ink); }
+  .sector-card .sc-pct { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .sector-bar { height: 4px; border-radius: 2px; margin-top: 8px; background: var(--orange); }
+
+  /* ── AUSBLICK ── */
+  .next-steps { display: flex; flex-direction: column; gap: 0; max-width: 580px; }
+  .ns-item {
+    display: flex; gap: 20px; align-items: flex-start;
+    padding: 18px 0; border-bottom: 0.5px solid var(--border);
+  }
+  .ns-item:last-child { border-bottom: none; }
+  .ns-num {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--orange-light); color: var(--orange-dark);
+    font-size: 13px; font-weight: 600; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0;
+  }
+  .ns-title { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+  .ns-desc  { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* ── QUOTE BOX ── */
+  .quote-box {
+    background: var(--orange-light); border-left: 3px solid var(--orange);
+    border-radius: 0 10px 10px 0; padding: 16px 20px;
+    margin: 24px 0;
+  }
+  .quote-box p { font-size: 14px; color: var(--orange-dark); line-height: 1.65; font-style: italic; }
+
+  /* ── NAV BUTTONS ── */
+  .nav-bar {
+    position: absolute; bottom: clamp(12px,1.8vh,24px); left: clamp(24px,4vw,64px); right: clamp(24px,4vw,64px);
+    display: flex; justify-content: space-between; align-items: center;
+    pointer-events: none;
+  }
+  .nav-btn {
+    padding: clamp(6px,0.8vh,9px) clamp(14px,1.5vw,22px); border-radius: 7px; font-size: clamp(11px,0.85vw,13px); font-weight: 500;
+    cursor: pointer; transition: all 0.15s; border: 1px solid var(--border);
+    background: #fff; color: var(--ink); font-family: 'DM Sans', sans-serif;
+    pointer-events: all;
+  }
+  .nav-btn:hover { border-color: var(--orange); color: var(--orange); }
+  .nav-btn.primary { background: var(--orange); color: #fff; border-color: var(--orange); }
+  .nav-btn.primary:hover { background: var(--orange-dark); border-color: var(--orange-dark); }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-btn:disabled:hover { border-color: var(--border); color: var(--ink); }
+  .slide-counter { font-size: 12px; color: var(--muted-light); }
+
+  /* ── DECO BOXES (slide 1) ── */
+  .deco-boxes {
+    position: absolute; top: 52px; right: 64px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .deco-box {
+    border-radius: 12px; padding: 14px 18px; min-width: 160px;
+    font-size: 13px; font-weight: 500; text-align: right;
+  }
+  .deco-box.a { background: var(--orange-light); color: var(--orange-dark); border: 0.5px solid var(--orange-border); }
+  .deco-box.b { background: var(--yellow-light); color: var(--yellow-dark); border: 0.5px solid var(--yellow-border); }
+  .deco-box.c { background: var(--teal-light);   color: var(--teal-dark);   border: 0.5px solid var(--teal-border); }
+  .deco-box span { display: block; font-size: 10px; font-weight: 400; opacity: 0.7; margin-top: 3px; }
+
+  /* ── RENDITE VISUAL (Slide 3) ── */
+  .rendite-paths { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+  .rp-card {
+    border-radius: 14px; padding: 28px; border: 1px solid var(--border);
+    position: relative; overflow: hidden;
+  }
+  .rp-card.left { background: var(--orange-light); border-color: var(--orange-border); }
+  .rp-card.right { background: var(--teal-light); border-color: var(--teal-border); }
+  .rp-num {
+    font-family: 'Playfair Display', serif; font-size: 48px;
+    font-weight: 500; line-height: 1; opacity: 0.12; position: absolute;
+    right: 16px; bottom: 8px;
+  }
+  .rp-card.left .rp-num { color: var(--orange); }
+  .rp-card.right .rp-num { color: var(--teal); }
+  .rp-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .rp-card.left .rp-title { color: var(--orange-dark); }
+  .rp-card.right .rp-title { color: var(--teal-dark); }
+  .rp-desc { font-size: 13px; line-height: 1.65; }
+  .rp-card.left .rp-desc { color: var(--orange-dark); opacity: 0.85; }
+  .rp-card.right .rp-desc { color: var(--teal-dark); opacity: 0.85; }
+
+  /* ── INFO ROW ── */
+  .info-highlight {
+    background: var(--bg-soft); border-radius: 10px; border: 1px solid var(--border);
+    padding: 16px 20px; display: flex; align-items: center; gap: 14px;
+    font-size: 14px; color: var(--ink-mid); line-height: 1.6;
+  }
+  .info-highlight .ih-icon { font-size: 22px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- TAB BAR -->
+  <div class="tab-bar-wrap">
+    <div class="tab-bar" id="tabBar">
+      <div class="tab active" onclick="goTo(0)"><span class="tab-num">01</span>Einstieg</div>
+      <div class="tab" onclick="goTo(1)"><span class="tab-num">02</span>Aktie</div>
+      <div class="tab" onclick="goTo(2)"><span class="tab-num">03</span>Rendite</div>
+      <div class="tab" onclick="goTo(3)"><span class="tab-num">04</span>Dividende</div>
+      <div class="tab" onclick="goTo(4)"><span class="tab-num">05</span>Vergleich</div>
+      <div class="tab" onclick="goTo(5)"><span class="tab-num">06</span>Qualität</div>
+      <div class="tab" onclick="goTo(6)"><span class="tab-num">07</span>Free Cash Flow</div>
+      <div class="tab" onclick="goTo(7)"><span class="tab-num">08</span>Aristokraten</div>
+      <div class="tab" onclick="goTo(8)"><span class="tab-num">09</span>Zinseszins</div>
+      <div class="tab" onclick="goTo(9)"><span class="tab-num">10</span>Rechner</div>
+      <div class="tab" onclick="goTo(10)"><span class="tab-num">11</span>Diversifikation</div>
+      <div class="tab" onclick="goTo(11)"><span class="tab-num">12</span>Tech &amp; Dividende</div>
+      <div class="tab" onclick="goTo(12)"><span class="tab-num">13</span>Ausblick</div>
+      <div class="tab" onclick="goTo(13)"><span class="tab-num">14</span>Disclaimer</div>
+    </div>
+  </div>
+
+  <!-- SLIDE CARD -->
+  <div class="slide-card">
+    <div class="accent-bar"></div>
+
+    <!-- SLIDE 1: EINSTIEG -->
+    <div class="slide active" id="slide-0">
+      <div class="deco-boxes">
+        <div class="deco-box a">Dividendenrendite<span>3–5% p.a.</span></div>
+        <div class="deco-box b">Zeithorizont<span>langfristig angelegt</span></div>
+        <div class="deco-box c">Diversifikation<span>30+ Positionen</span></div>
+      </div>
+      <div class="slide-tag">Vermögensstrategie · Grundlagen</div>
+      <h1 class="display">Ihr Depot.<br>Ihr <em>Vermögen</em>.<br>Ihr Horizont.</h1>
+      <p class="lead">Ein Einblick in die Welt der Dividendenaktien — was dahintersteckt, wie es funktioniert und warum Zeit Ihr größter Vorteil ist.</p>
+      <div class="stat-row">
+        <div class="stat-cell"><span class="stat-num orange-num">3–5%</span><span class="stat-label">Ø Dividendenrendite</span></div>
+        <div class="stat-cell"><span class="stat-num yellow-num">10+</span><span class="stat-label">Jahre Zeithorizont</span></div>
+        <div class="stat-cell"><span class="stat-num teal-num">30+</span><span class="stat-label">Positionen</span></div>
+      </div>
+      <div class="pills">
+        <div class="pill orange">Klassische Dividendenstrategie</div>
+        <div class="pill teal">Langfristig stabil</div>
+        <div class="pill yellow">Regelmäßige Erträge</div>
+      </div>
+      <div class="nav-bar">
+        <button class="nav-btn" disabled>← Zurück</button>
+        <span class="slide-counter">1 / 13</span>
+        <button class="nav-btn primary" onclick="goTo(1)">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: WAS IST EINE AKTIE -->
+    <div class="slide" id="slide-1">
+      <div class="slide-tag">Grundlagen · Eigenkapital</div>
+      <h2 class="section-title">Was ist eine <em>Aktie</em>?</h2>
+      <p class="lead">Eine Aktie verbrieft eine Beteiligung am Eigenkapital eines Unternehmens. Als Aktionär sind Sie rechtlich gesehen Miteigentümer.</p>
+      <div class="two-col">
+        <div class="card orange-accent">
+          <div class="card-label orange">Ihre Rechte als Aktionärin</div>
+          <ul>
+            <li>Dividendenanspruch bei Gewinnausschüttung</li>
+            <li>Stimmrecht auf der Hauptversammlung</li>
+            <li>Recht auf Anteil am Liquidationserlös</li>
+            <li>Informations- und Auskunftsrechte</li>
+          </ul>
+        </div>
+        <div class="card teal-accent">
+          <div class="card-label teal">Was bedeutet Miteigentümer?</div>
+          <ul>
+            <li>Anteiliger Anspruch am Unternehmensvermögen</li>
+            <li>Partizipation an Gewinnen und Verlusten</li>
+            <li>Keine persönliche Haftung über Einlage hinaus</li>
+            <li>Handelbar: jederzeit an der Börse verkäuflich</li>
+          </ul>
+        </div>
+      </div>
+      <div class="info-highlight">
+        <span class="ih-icon">💡</span>
+        <span>Im Gegensatz zu einer Anleihe (Fremdkapital) ist eine Aktie kein Rückzahlungsversprechen — sie ist echter Unternehmensanteil. Mehr Risiko, aber auch mehr Chancen.</span>
+      </div>
+      <div class="nav-bar">
+        <button class="nav-btn" onclick="goTo(0)">← Zurück</button>
+        <span class="slide-counter">2 / 13</span>
+        <button class="nav-btn primary" onclick="goTo(2)">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: WIE ENTSTEHT RENDITE -->
+    <div class="slide" id="slide-2">
+      <div class="slide-tag">Grundlagen · Ertrag</div>
+      <h2 class="section-title">Wie entsteht <em>Rendite</em>?</h2>
+      <p class="lead">Mit Aktien lässt sich auf zwei grundlegend verschiedene Arten Geld verdienen — und beide sind relevant für Ihre Strategie.</p>
+      <div class="rendite-paths">
+        <div class="rp-card left">
+          <div class="rp-num">1</div>
+          <div class="rp-title">Kurssteigerung</div>
+          <div class="rp-desc">Der Wert Ihrer Aktie steigt, weil das Unternehmen wächst und mehr wert wird. Sie realisieren den Gewinn beim Verkauf.</div>
+        </div>
+        <div class="rp-card right">
+          <div class="rp-num">2</div>
+          <div class="rp-title">Dividende</div>
+          <div class="rp-desc">Das Unternehmen schüttet einen Teil seines Gewinns regelmäßig an die Aktionäre aus — unabhängig vom Kursverlauf.</div>
+        </div>
+      </div>
+      <div class="info-highlight">
+        <span class="ih-icon">📌</span>
+        <span>Unsere Strategie setzt primär auf die <strong>Dividende als verlässliche, laufende Einkommensquelle</strong> — ergänzt durch langfristige Kurssteigerungen der ausgewählten Qualitätsunternehmen.</span>
+      </div>
+      <div class="nav-bar">
+        <button class="nav-btn" onclick="goTo(1)">← Zurück</button>
+        <span class="slide-counter">3 / 13</span>
+        <button class="nav-btn primary" onclick="goTo(3)">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: WAS IST EINE DIVIDENDE -->
+    <div class="slide" id="slide-3">
+      <div class="slide-tag">Grundlagen · Ausschüttung</div>
+      <h2 class="section-title">Was ist eine <em>Dividende</em>?</h2>
+      <p class="lead">Die Dividende ist der Teil des Unternehmensgewinns, den der Vorstand beschließt, an die Aktionäre auszuschütten — in der Regel einmal jährlich.</p>
+      <div class="three-col">
+        <div class="card orange-accent">
+          <div class="card-label orange">Rechenbeispiel</div>
+          <h3>4% Rendite</h3>
+          <p>Bei einem Depotvolumen von 500.000 €:</p>
+          <p style="font-family:'Playfair Display',serif; font-size:26px; color:var(--orange); font-weight:500;">€ 20.000</p>
+          <p>jährliche Ausschüttung vor Steuern</p>
+        </div>
+        <div class="card yellow-accent">
+          <div class="card-label yellow">Wie wird sie festgelegt?</div>
+          <ul>
+            <li>Vorstandsvorschlag basierend auf Jahresgewinn</li>
+            <li>Beschluss durch Hauptversammlung</li>
+            <li>Auszahlung nach dem Ex-Dividenden-Tag</li>
+          </ul>
+        </div>
+        <div class="card teal-accent">
+          <div class="card-label teal">Was beeinflusst die Höhe?</div>
+          <ul>
+            <li>Höhe des Jahresgewinns</li>
+            <li>Investitionsbedarf des Unternehmens</li>
+            <li>Strategische Prioritäten des Vorstands</li>
+            <li>Verfügbarer Free Cash Flow ↗</li>
+          </ul>
+        </div>
+      </div>
+      <div class="quote-box">
+        <p>Nicht jeder Buchgewinn ist als Dividende verfügbar — entscheidend ist, wie viel Geld das Unternehmen nach Investitionen tatsächlich frei zur Verfügung hat.</p>
+      </div>
+      <div class="nav-bar">
+        <button class="nav-btn" onclick="goTo(2)">← Zurück</button>
+        <span class="slide-counter">4 / 13</span>
+        <button class="nav-btn primary" onclick="goTo(4)">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: VERGLEICH -->
+    <div class="slide" id="slide-4">
+      <div class="slide-tag">Analyse · Strategievergleich</div>
+      <h2 class="section-title"><em>Dividendentitel</em> vs. Wachstumstitel</h2>
+      <p class="lead">Klicken Sie auf eine Karte, um die Details einzublenden.</p>
+      <div class="two-col">
+        <div class="compare-card open" id="cc1" onclick="toggleCard('cc1')">
+          <div class="card-title">Dividendentitel</div>
+          <div class="card-sub">Etablierte Unternehmen, stabile Cashflows</div>
+          <div class="detail">
+            <div class="detail-row"><span class="dl">Geschäftsmodell</span><span class="dv">Reif, etabliert</span></div>
+            <div class="detail-row"><span class="dl">Ausschüttung</span><span class="dv">Regelmäßig, planbar</span></div>
+            <div class="detail-row"><span class="dl">Wachstum</span><span class="dv">Moderat, stabil</span></div>
+            <div class="detail-row"><span class="dl">Risikoprofil</span><span class="dv">Defensiv</span></div>
+            <div class="detail-row"><span class="dl">Typische Sektoren</span><span class="dv">Versorger, Konsum, Pharma, Finanzen</span></div>
+            <div class="detail-row"><span class="dl">Beispiele</span><span class="dv">Nestlé, Allianz, LVMH</span></div>
+          </div>
+          <div class="hint">→ Anklicken für Details</div>
+        </div>
+        <div class="compare-card" id="cc2" onclick="toggleCard('cc2')">
+          <div class="card-title">Wachstumstitel</div>
+          <div class="card-sub">Hohe Reinvestition, starkes Kurspotenzial</div>
+          <div class="detail">
+            <div class="detail-row"><span class="dl">Geschäftsmodell</span><span class="dv">Skalierend, disruptiv</span></div>
+            <div class="detail-row"><span class="dl">Ausschüttung</span><span class="dv">Gering oder keine</span></div>
+            <div class="detail-row"><span class="dl">Wachstum</span><span class="dv">Hoch, oft zweistellig</span></div>
+            <div class="detail-row"><span class="dl">Risikoprofil</span><span class="dv">Volatiler</span></div>
+            <div class="detail-row"><span class="dl">Typische Sektoren</span><span class="dv">Technologie, Biotech</span></div>
+            <div class="detail-row"><span class="dl">Beispiele</span><span class="dv">Nvidia, Amazon, Tesla</span></div>
+          </div>
+          <div class="hint">→ Anklicken für Details</div>
+        </div>
+      </div>
+      <div class="nav-bar">
+        <button class="nav-btn" onclick="goTo(3)">← Zurück</button>
+        <span class="slide-counter">5 / 13</span>
+        <button class="nav-btn primary" onclick="goTo(5)">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: QUALITÄT -->
+    <div class="slide" id="slide-5">
+      <div class="slide-tag">Deep Dive · Qualität</div>
+      <h2 class="section-title">Dividende ist nicht gleich <em>Dividende</em></h2>
+      <p class="lead">Eine hohe Dividendenrendite klingt attraktiv. Sie sagt allein aber wenig über die Qualität einer Investition aus.</p>
+      <div class="two-col">
+        <div class="card orange-accent">
+          <div class="card-label orange">Was macht eine Dividende nachhaltig?</div>
+          <ul>
+            <li>Ausschüttungsquote unter 70% des Free Cash Flow</li>
+            <li>Stabiler oder wachsender Gewinn über mehrere Jahre</li>
+            <li>Starke Bilanz, geringe Verschuldung</li>
+            <li>Dividende wurde nie gekürzt oder ausgesetzt</li>
+          </ul>
+        </div>
+        <div class="card teal-accent">
+          <div class="card-label teal">Warnzeichen</div>
+          <ul>
+            <li>Rendite von 8–10%+ ohne Sondereffekt</li>
+            <li>Dividende übersteigt den Gewinn</li>
+            <li>Unternehmen macht Schulden für Ausschüttung</li>
+            <li>Rückläufige Cashflows trotz Dividendenzahlung</li>
+          </ul>
+        </div>
+      </div>
+      <div class="quote-box">
+        <p>„Eine Dividende von 3%, die seit 20 Jahren jedes Jahr gestiegen ist, ist wertvoller als eine Dividende von 7%, die nächstes Jahr gestrichen werden könnte."</p>
+      </div>
+      <div class="nav-bar">
+        <button class="nav-btn" onclick="goTo(4)">← Zurück</button>
+        <span class="slide-counter">6 / 13</span>
+        <button class="nav-btn primary" onclick="goTo(6)">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: FREE CASH FLOW -->
+    <div class="slide" id="slide-6">
+      <div class="slide-tag">Grundlagen · Unternehmensfinanzen</div>
+      <h2 class="section-title">Woher kommt die Dividende <em>wirklich</em>?</h2>
+      <p class="lead">Vom Umsatz bis zur Ausschüttung durchläuft das Geld mehrere Stufen — nur was am Ende übrig bleibt, kann nachhaltig ausgeschüttet werden.</p>
+      <div class="waterfall">
+        <div class="wf-step">
+          <div class="wf-icon orange">💰</div>
+          <div>
+            <div class="wf-title">Umsatz / Einnahmen</div>
+            <div class="wf-desc">Was das Unternehmen insgesamt verdient — vor allen Kosten.</div>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-icon yellow">⚙️</div>
+          <div>
+            <div class="wf-title">minus: Betriebskosten &amp; Abschreibungen</div>
+            <div class="wf-desc">Kosten für den laufenden Betrieb und den Wertverlust von Anlagen — das Unternehmen muss funktionsfähig bleiben.</div>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-icon yellow">🏭</div>
+          <div>
+            <div class="wf-title">minus: Investitionen (Capex)</div>
+            <div class="wf-desc">Neue Maschinen, Technologie, Expansion — Investitionen in die Zukunft des Unternehmens, die über reine Abschreibungen hinausgehen.</div>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-icon teal">✅</div>
+          <div>
+            <div class="wf-title">= Free Cash Flow</div>
+            <div class="wf-desc"><strong>Der entscheidende Wert.</strong> Das Geld, das das Unternehmen nach allen Investitionen frei zur Verfügung hat — und aus dem die Dividende nachhaltig gezahlt werden kann.</div>
+          </div>
+        </div>
+        <div class="wf-step">
+          <div class="wf-icon orange">💸</div>
+          <div>
+            <div class="wf-title">davon: Dividende an Aktionäre</div>
+            <div class="wf-desc">Ein Teil des Free Cash Flow wird ausgeschüttet. Eine gesunde Ausschüttungsquote liegt typischerweise bei 40–65% des FCF.</div>
+          </div>
+        </div>
+      </div>
+      <div class="nav-bar">
+        <button class="nav-btn" onclick="goTo(5)">← Zurück</button>
+        <span class="slide-counter">7 / 13</span>
+        <button class="nav-btn primary" onclick="goTo(7)">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: ARISTOKRATEN -->
+    <div class="slide" id="slide-7">
+      <div class="slide-tag">Deep Dive · Kontinuität</div>
+      <h2 class="section-title">Die <em>Dividenden&shy;aristokraten</em></h2>
+      <p class="lead">Unternehmen, die ihre Dividende über Jahrzehnte jedes Jahr gesteigert haben — durch Krisen, Rezessionen und Marktturbulenzen. Das ist kein Zufall, sondern Qualitätsbeweis.</p>
+      <div class="aristocrat-grid">
+        <div class="a-card"><div class="co">Procter &amp; Gamble</div><div class="yrs">67</div><div class="yrs-label">Jahre Dividendensteigerung</div><div class="sector">Konsumgüter · USA</div></div>
+        <div class="a-card"><div class="co">Coca-Cola</div><div class="yrs">62</div><div class="yrs-label">Jahre Dividendensteigerung</div><div class="sector">Getränke · USA</div></div>
+        <div class="a-card"><div class="co">Johnson &amp; Johnson</div><div class="yrs">61</div><div class="yrs-label">Jahre Dividendensteigerung</div><div class="sector">Pharma · USA</div></div>
+        <div class="a-card"><div class="co">Nestlé</div><div class="yrs">29</div><div class="yrs-label">Jahre stabile Dividende</div><div class="sector">Nahrungsmittel · CH</div></div>
+        <div class="a-card"><div class="co">Allianz</div><div class="yrs">15+</div><div class="yrs-label">Jahre Dividendenwachstum</div><div class="sector">Versicherung · DE</div></div>
+        <div class="a-card"><div class="co">LVMH</div><div class="yrs">20+</div><div class="yrs-label">Jahre Dividendenwachstum</div><div class="sector">Luxusgüter · FR</div></div>
+      </div>
+      <div class="info-highlight">
+        <span class="ih-icon">🏆</span>
+        <span>Als „Dividendenaristokrat" gilt offiziell, wer die Dividende mindestens <strong>25 Jahre in Folge gesteigert</strong> hat. Das setzt voraus, dass der Free Cash Flow über Jahrzehnte stabil und wachsend war.</span>
+      </div>
+      <div class="nav-bar">
+        <button class="nav-btn" onclick="goTo(6)">← Zurück</button>
+        <span class="slide-counter">8 / 13</span>
+        <button class="nav-btn primary" onclick="goTo(8)">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: ZINSESZINS -->
+    <div class="slide" id="slide-8">
+      <div class="slide-tag">Interaktiv · Zinseszins</div>
+      <h2 class="section-title">Der <em>Zinseszins</em>-Effekt</h2>
+      <p class="lead">Reinvestierte Dividenden kaufen neue Anteile — die wiederum Dividenden zahlen. Passen Sie die Parameter an und sehen Sie den Unterschied.</p>
+      <div class="slider-group">
+        <div class="slider-label"><span>Startkapital</span><span id="kapital-out">500.000 €</span></div>
+        <input type="range" min="100000" max="2000000" step="50000" value="500000" id="kapital" oninput="updateZins()">
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span>Dividendenrendite</span><span id="rendite-out">3,5%</span></div>
+        <input type="range" min="1" max="7" step="0.5" value="3.5" id="rendite" oninput="updateZins()">
+      </div>
+      <div class="slider-group">
+        <div class="slider-label"><span>Anlagehorizont</span><span id="jahre-out">20 Jahre</span></div>
+        <input type="range" min="5" max="40" step="1" value="20" id="jahre" oninput="updateZins()">
+      </div>
+      <div class="zins-result">
+        <div class="zins-box reinvest">
+          <div class="zb-label">Mit Reinvestition</div>
+          <div class="zb-val" id="zv-reinvest">—</div>
+          <div class="zb-sub">Depotwert nach <span id="zv-jahre1">20</span> Jahren</div>
+        </div>
+        <div class="zins-box entnommen">
+          <div class="zb-label">Dividende entnommen</div>
+          <div class="zb-val" id="zv-entnommen">—</div>
+          <div class="zb-sub">Depotwert (ohne Reinvestition)</div>
+        </div>
+      </div>
+      <div class="chart-area">
+        <canvas id="zinsChart"></canvas>
+      </div>
+      <div class="nav-bar">
+        <button class="nav-btn" onclick="goTo(7)">← Zurück</button>
+        <span class="slide-counter">9 / 13</span>
+        <button class="nav-btn primary" onclick="goTo(9)">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: RECHNER -->
+    <div class="slide" id="slide-9">
+      <div class="slide-tag">Interaktiv · Ausschüttungsrechner</div>
+      <h2 class="section-title">Ihr persönlicher <em>Dividenden-Rechner</em></h2>
+      <p class="lead">Geben Sie Ihre Parameter ein und sehen Sie, was Ihr Depot jährlich ausschüttet.</p>
+      <div class="rechner-grid">
+        <div>
+          <div class="input-group">
+            <label class="input-label">Depotwert (€)</label>
+            <input class="input-field" type="number" id="r-depot" value="500000" oninput="updateRechner()">
+          </div>
+          <div class="input-group">
+            <label class="input-label">Dividendenrendite (%)</label>
+            <input class="input-field" type="number" id="r-rendite" value="3.5" step="0.1" oninput="updateRechner()">
+          </div>
+          <div class="input-group">
+            <label class="input-label">Anlagehorizont (Jahre)</label>
+            <input class="input-field" type="number" id="r-jahre" value="10" oninput="updateRechner()">
+          </div>
+        </div>
+        <div class="rechner-output">
+          <div class="ro-line"><span class="rl">Jährliche Ausschüttung</span><span class="rv highlight" id="r-jaehrlich">—</span></div>
+          <div class="ro-line"><span class="rl">Monatlich (ca.)</span><span class="rv" id="r-monatlich">—</span></div>
+          <div class="ro-line"><span class="rl">Gesamtausschüttung (<span id="r-jahre-label">10</span> Jahre)</span><span class="rv" id="r-gesamt">—</span></div>
+          <div class="ro-line"><span class="rl">Depotwert mit Reinvestition</span><span class="rv" id="r-depot-rein">—</span></div>
+        </div>
+      </div>
+      <div class="nav-bar">
+        <button class="nav-btn" onclick="goTo(8)">← Zurück</button>
+        <span class="slide-counter">10 / 13</span>
+        <button class="nav-btn primary" onclick="goTo(10)">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: DIVERSIFIKATION -->
+    <div class="slide" id="slide-10">
+      <div class="slide-tag">Struktur · Portfolio</div>
+      <h2 class="section-title">Diversifikation &amp; <em>Struktur</em></h2>
+      <p class="lead">Eine klassische Dividendenstrategie verteilt das Risiko über Sektoren, Regionen und Ausschüttungszeitpunkte — für einen gleichmäßigen Einkommensstrom.</p>
+      <div class="sector-grid">
+        <div class="sector-card"><span class="sc-icon">🏥</span><div class="sc-name">Gesundheit</div><div class="sc-pct">~20%</div><div class="sector-bar" style="background:var(--teal);width:80%"></div></div>
+        <div class="sector-card"><span class="sc-icon">🛒</span><div class="sc-name">Konsum</div><div class="sc-pct">~18%</div><div class="sector-bar" style="width:72%"></div></div>
+        <div class="sector-card"><span class="sc-icon">🏦</span><div class="sc-name">Finanzen</div><div class="sc-pct">~16%</div><div class="sector-bar" style="background:var(--yellow-dark);width:64%"></div></div>
+        <div class="sector-card"><span class="sc-icon">⚡</span><div class="sc-name">Versorger</div><div class="sc-pct">~14%</div><div class="sector-bar" style="background:var(--teal);width:56%"></div></div>
+        <div class="sector-card"><span class="sc-icon">🏭</span><div class="sc-name">Industrie</div><div class="sc-pct">~14%</div><div class="sector-bar" style="width:56%"></div></div>
+        <div class="sector-card"><span class="sc-icon">💎</span><div class="sc-name">Luxus &amp; Konsum</div><div class="sc-pct">~10%</div><div class="sector-bar" style="background:var(--yellow-dark);width:40%"></div></div>
+        <div class="sector-card"><span class="sc-icon">🌍</span><div class="sc-name">Sonstiges</div><div class="sc-pct">~8%</div><div class="sector-bar" style="background:var(--muted-light);width:32%"></div></div>
+      </div>
+      <div class="info-highlight">
+        <span class="ih-icon">🗓️</span>
+        <span>Durch gezielte Auswahl von Unternehmen mit unterschiedlichen Ausschüttungsterminen (Jan–Dez) entsteht ein <strong>gleichmäßiger monatlicher Cashflow</strong> über das gesamte Jahr.</span>
+      </div>
+      <div class="nav-bar">
+        <button class="nav-btn" onclick="goTo(9)">← Zurück</button>
+        <span class="slide-counter">11 / 13</span>
+        <button class="nav-btn primary" onclick="goTo(11)">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- SLIDE 12: TECH & DIVIDENDE -->
+    <div class="slide" id="slide-11">
+      <div class="slide-tag">Vergleich · Technologieaktien</div>
+      <h2 class="section-title">Apple, Nvidia &amp; Co. — <em>warum nicht?</em></h2>
+      <p class="lead">Die bekanntesten Aktien der Welt sind keine Dividendentitel — nicht weil sie schlecht sind, sondern weil sie einer anderen Philosophie folgen.</p>
+      <table class="tech-table">
+        <thead>
+          <tr>
+            <th>Unternehmen</th>
+            <th>Dividendenrendite</th>
+            <th>Strategie</th>
+            <th>Kategorie</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="co-name">Nestlé</td><td class="high-div">3,2%</td><td>Stabile Ausschüttung seit Jahrzehnten</td><td><span class="category-div">Dividendentitel</span></td></tr>
+          <tr><td class="co-name">Allianz</td><td class="high-div">4,8%</td><td>Hohe FCF-basierte Ausschüttungsquote</td><td><span class="category-div">Dividendentitel</span></td></tr>
+          <tr><td class="co-name">LVMH</td><td class="high-div">2,9%</td><td>Wachsend + ausschüttend</td><td><span class="category-div">Dividendentitel</span></td></tr>
+          <tr><td class="co-name">Apple</td><td class="low-div">0,5%</td><td>Aktienrückkäufe statt Dividende</td><td><span class="category-growth">Wachstum / Rückkauf</span></td></tr>
+          <tr><td class="co-name">Microsoft</td><td class="low-div">0,7%</td><td>Geringe Dividende, hohes Reinvestment</td><td><span class="category-growth">Wachstum / Rückkauf</span></td></tr>
+          <tr><td class="co-name">Nvidia</td><td class="low-div">0,03%</td><td>Kaum Ausschüttung, maximales Wachstum</td><td><span class="category-growth">Reines Wachstum</span></td></tr>
+        </tbody>
+      </table>
+      <div class="quote-box">
+        <p>Apple und Nvidia sind hervorragende Unternehmen. Aber ihre Philosophie lautet: Gewinne reinvestieren, um noch mehr zu wachsen. Unsere Philosophie lautet: verlässliche Erträge heute und morgen.</p>
+      </div>
+      <div class="nav-bar">
+        <button class="nav-btn" onclick="goTo(10)">← Zurück</button>
+        <span class="slide-counter">12 / 13</span>
+        <button class="nav-btn primary" onclick="goTo(12)">Weiter →</button>
+      </div>
+    </div>
+
+    <!-- SLIDE 13: AUSBLICK -->
+    <div class="slide" id="slide-12">
+      <div class="slide-tag">Ausblick · Nächste Schritte</div>
+      <h2 class="section-title">Ausblick &amp; <em>nächste Schritte</em></h2>
+      <p class="lead">Sie haben heute die Grundlagen Ihrer Anlagestrategie kennengelernt. Was bedeutet das konkret für die Zusammenarbeit?</p>
+      <div class="next-steps">
+        <div class="ns-item">
+          <div class="ns-num">1</div>
+          <div><div class="ns-title">Regelmäßiges Reporting</div><div class="ns-desc">Sie erhalten quartalsweise einen strukturierten Bericht über Ihr Depot: Entwicklung, Ausschüttungen, Positionsveränderungen.</div></div>
+        </div>
+        <div class="ns-item">
+          <div class="ns-num">2</div>
+          <div><div class="ns-title">Jährliches Strategiegespräch</div><div class="ns-desc">Einmal im Jahr besprechen wir gemeinsam, ob die Strategie noch zu Ihrer Lebenssituation passt — und ob Anpassungen sinnvoll sind.</div></div>
+        </div>
+        <div class="ns-item">
+          <div class="ns-num">3</div>
+          <div><div class="ns-title">Transparenz bei Veränderungen</div><div class="ns-desc">Jede Transaktion wird Ihnen vorab erläutert. Sie verstehen jederzeit, warum wir was tun.</div></div>
+        </div>
+        <div class="ns-item">
+          <div class="ns-num">4</div>
+          <div><div class="ns-title">Ihre Fragen — jederzeit</div><div class="ns-desc">Sie erreichen mich direkt. Keine Frage ist zu groß oder zu klein.</div></div>
+        </div>
+      </div>
+      <div class="nav-bar">
+        <button class="nav-btn" onclick="goTo(11)">← Zurück</button>
+        <span class="slide-counter">13 / 14</span>
+        <button class="nav-btn primary" onclick="goTo(13)">Weiter →</button>
+      </div>
+    </div>
+
+
+    <!-- S14: DISCLAIMER -->
+    <div class="slide" id="slide-13">
+      <div class="slide-tag">Rechtlicher Hinweis · Disclaimer</div>
+      <h2 class="section-title">Rechtlicher <em>Hinweis</em></h2>
+      <p class="lead">Bitte lesen Sie die nachfolgenden Hinweise sorgfältig, bevor Sie die Inhalte dieser Präsentation als Grundlage für Anlageentscheidungen verwenden.</p>
+      <div class="two-col" style="margin-bottom:clamp(12px,1.8vh,20px);">
+        <div class="card orange-accent">
+          <div class="card-label orange">Kein Anlageberatungsvertrag</div>
+          <p>Die in dieser Präsentation enthaltenen Informationen stellen keine Anlageberatung, keine Anlageempfehlung und kein Angebot zum Kauf oder Verkauf von Wertpapieren oder sonstigen Finanzinstrumenten dar. Sie ersetzen nicht das individuelle Beratungsgespräch und begründen keinen Beratungsvertrag.</p>
+        </div>
+        <div class="card teal-accent">
+          <div class="card-label teal">Keine Haftung für Vollständigkeit</div>
+          <p>Die Inhalte wurden nach bestem Wissen und Gewissen zusammengestellt und sorgfältig geprüft. Dennoch kann keine Gewähr für die Richtigkeit, Vollständigkeit oder Aktualität der Angaben übernommen werden. Eine Haftung für Schäden, die durch die Nutzung dieser Informationen entstehen, ist ausgeschlossen, soweit dies gesetzlich zulässig ist.</p>
+        </div>
+      </div>
+      <div class="card yellow-accent" style="margin-bottom:clamp(12px,1.8vh,20px);">
+        <div class="card-label yellow">Hinweis: KI-gestützte Erstellung</div>
+        <p style="margin-bottom:0;">Diese Präsentation wurde unter Einsatz von Systemen mit künstlicher Intelligenz (KI) erstellt und aufbereitet. Die generierten Inhalte wurden von einem qualifizierten Finanzberater inhaltlich überprüft und freigegeben. Gleichwohl kann nicht ausgeschlossen werden, dass KI-generierte Inhalte Ungenauigkeiten, Auslassungen oder sachliche Fehler enthalten. Die Verantwortung für die endgültige Verwendung der Inhalte verbleibt beim Nutzer.</p>
+      </div>
+      <div class="info-highlight">
+        <span class="ih-icon">⚖️</span>
+        <span>Alle Angaben zu Dividendenrenditen, Unternehmensdaten und Marktinformationen sind exemplarischer Natur und basieren auf öffentlich zugänglichen Quellen zum Zeitpunkt der Erstellung. Vergangene Wertentwicklungen sind kein verlässlicher Indikator für künftige Ergebnisse. Investitionen in Wertpapiere sind mit Risiken verbunden, die bis zum vollständigen Verlust des eingesetzten Kapitals führen können. Es gelten die jeweils aktuellen gesetzlichen und regulatorischen Vorschriften, insbesondere die Regelungen der MiFID&nbsp;II sowie des Wertpapierhandelsgesetzes (WpHG).</span>
+      </div>
+      <div class="nav-bar">
+        <button class="nav-btn" onclick="goTo(12)">← Zurück</button>
+        <span class="slide-counter">14 / 14</span>
+        <button class="nav-btn primary" disabled>Fertig ✓</button>
+      </div>
+    </div>
+
+  </div><!-- /slide-card -->
+</div><!-- /shell -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+  let currentSlide = 0;
+  const totalSlides = 14;
+
+  function goTo(n) {
+    document.getElementById('slide-' + currentSlide).classList.remove('active');
+    document.querySelectorAll('.tab')[currentSlide].classList.remove('active');
+    currentSlide = n;
+    document.getElementById('slide-' + currentSlide).classList.add('active');
+    document.querySelectorAll('.tab')[currentSlide].classList.add('active');
+    const tab = document.querySelectorAll('.tab')[n];
+    tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    if (n === 8) { setTimeout(updateZins, 100); }
+    if (n === 9) { setTimeout(updateRechner, 100); }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function toggleCard(id) {
+    document.getElementById(id).classList.toggle('open');
+  }
+
+  // ── ZINSESZINS ──
+  let zinsChartInstance = null;
+
+  function updateZins() {
+    const k = parseFloat(document.getElementById('kapital').value);
+    const r = parseFloat(document.getElementById('rendite').value) / 100;
+    const j = parseInt(document.getElementById('jahre').value);
+
+    document.getElementById('kapital-out').textContent = (k/1000).toFixed(0) + '.' + '000 €';
+    document.getElementById('rendite-out').textContent = (r*100).toFixed(1).replace('.', ',') + '%';
+    document.getElementById('jahre-out').textContent = j + ' Jahre';
+    document.getElementById('zv-jahre1').textContent = j;
+
+    const reinvest = k * Math.pow(1 + r, j);
+    const entnommen = k;
+
+    document.getElementById('zv-reinvest').textContent = formatEur(reinvest);
+    document.getElementById('zv-entnommen').textContent = formatEur(entnommen);
+
+    const labels = [];
+    const dataRein = [];
+    const dataEntn = [];
+    for (let y = 0; y <= j; y++) {
+      labels.push(y === 0 ? 'Heute' : 'Jahr ' + y);
+      dataRein.push(Math.round(k * Math.pow(1 + r, y)));
+      dataEntn.push(Math.round(k));
+    }
+
+    const ctx = document.getElementById('zinsChart').getContext('2d');
+    if (zinsChartInstance) zinsChartInstance.destroy();
+    zinsChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Mit Reinvestition', data: dataRein, borderColor: '#FF6B35', backgroundColor: 'rgba(255,107,53,0.08)', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.4 },
+          { label: 'Dividende entnommen', data: dataEntn, borderColor: '#C0C0C0', borderWidth: 1.5, pointRadius: 0, borderDash: [5,4], fill: false }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { font: { family: 'DM Sans', size: 12 }, color: '#6B7280', padding: 16 } } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { family: 'DM Sans', size: 11 }, color: '#9CA3AF', maxTicksLimit: 8 } },
+          y: { grid: { color: '#F0F0F0' }, ticks: { font: { family: 'DM Sans', size: 11 }, color: '#9CA3AF', callback: v => (v/1000).toFixed(0) + 'k €' } }
+        }
+      }
+    });
+  }
+
+  function updateRechner() {
+    const depot = parseFloat(document.getElementById('r-depot').value) || 0;
+    const rendite = parseFloat(document.getElementById('r-rendite').value) / 100 || 0;
+    const jahre = parseInt(document.getElementById('r-jahre').value) || 0;
+
+    const jaehrlich = depot * rendite;
+    const monatlich = jaehrlich / 12;
+    const gesamt = jaehrlich * jahre;
+    const depotRein = depot * Math.pow(1 + rendite, jahre);
+
+    document.getElementById('r-jaehrlich').textContent = formatEur(jaehrlich);
+    document.getElementById('r-monatlich').textContent = formatEur(monatlich);
+    document.getElementById('r-gesamt').textContent = formatEur(gesamt);
+    document.getElementById('r-depot-rein').textContent = formatEur(depotRein);
+    document.getElementById('r-jahre-label').textContent = jahre;
+  }
+
+  function formatEur(n) {
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Math.round(n));
+  }
+
+  updateRechner();
+
+  // Keyboard navigation
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' && currentSlide < 13) goTo(currentSlide + 1);
+    if (e.key === 'ArrowLeft'  && currentSlide > 0)  goTo(currentSlide - 1);
+  });
+</script>
+<div style="position:fixed;bottom:12px;right:18px;font-size:10px;color:#C0C0C0;pointer-events:none;">← → Pfeiltasten zum Navigieren</div>
+</body>
+</html>
