@@ -28,6 +28,9 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python scripts/daily_mail_brief.py
 
+      - name: Datum setzen
+        run: echo "DATE=$(date +'%d.%m.%Y')" >> $GITHUB_ENV
+
       - name: HTML-Datei als Artifact speichern
         uses: actions/upload-artifact@v4
         with:
@@ -35,17 +38,14 @@ jobs:
           path: output/daily_brief.html
           retention-days: 7
 
-      # Optional: Brief direkt per E-Mail zusenden
-      # Dazu Secret NETCOLOGNE_USER = daniel@raab.koeln anlegen
-      #
-      # - name: Brief per E-Mail senden
-      #   uses: dawidd6/action-send-mail@v3
-      #   with:
-      #     server_address: smtp.netcologne.de
-      #     server_port: 587
-      #     username: ${{ secrets.NETCOLOGNE_USER }}
-      #     password: ${{ secrets.NETCOLOGNE_PASSWORD }}
-      #     subject: "Daily Mail Brief – ${{ env.DATE }}"
-      #     to: daniel@raab.koeln
-      #     from: daniel@raab.koeln
-      #     html_body: file://output/daily_brief.html
+      - name: Brief per E-Mail senden
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.netcologne.de
+          server_port: 587
+          username: daniel@raab.koeln
+          password: ${{ secrets.NETCOLOGNE_PASSWORD }}
+          subject: "Daily Mail Brief – ${{ env.DATE }}"
+          to: daniel@raab.koeln
+          from: daniel@raab.koeln
+          html_body: file://output/daily_brief.html
