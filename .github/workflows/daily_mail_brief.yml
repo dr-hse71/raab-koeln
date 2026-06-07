@@ -1,0 +1,51 @@
+name: Daily Mail Brief
+
+on:
+  schedule:
+    # Täglich um 05:00 UTC = 06:00 Uhr MEZ / 07:00 Uhr MESZ
+    - cron: "0 5 * * *"
+  workflow_dispatch:  # Manuell auslösbar über GitHub UI
+
+jobs:
+  generate-brief:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Python einrichten
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Abhängigkeiten installieren
+        run: pip install anthropic beautifulsoup4
+
+      - name: Daily Mail Brief generieren
+        env:
+          NETCOLOGNE_PASSWORD: ${{ secrets.NETCOLOGNE_PASSWORD }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python scripts/daily_mail_brief.py
+
+      - name: HTML-Datei als Artifact speichern
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-brief-${{ github.run_id }}
+          path: output/daily_brief.html
+          retention-days: 7
+
+      # Optional: Brief direkt per E-Mail zusenden
+      # Dazu Secret NETCOLOGNE_USER = daniel@raab.koeln anlegen
+      #
+      # - name: Brief per E-Mail senden
+      #   uses: dawidd6/action-send-mail@v3
+      #   with:
+      #     server_address: smtp.netcologne.de
+      #     server_port: 587
+      #     username: ${{ secrets.NETCOLOGNE_USER }}
+      #     password: ${{ secrets.NETCOLOGNE_PASSWORD }}
+      #     subject: "Daily Mail Brief – ${{ env.DATE }}"
+      #     to: daniel@raab.koeln
+      #     from: daniel@raab.koeln
+      #     html_body: file://output/daily_brief.html
