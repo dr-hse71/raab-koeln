@@ -11,8 +11,8 @@ from bs4 import BeautifulSoup
 
 # ── Konfiguration ──────────────────────────────────────────────
 IMAP_HOST = "imap.netcologne.de"
-IMAP_PORT = 993
-IMAP_USER = "daniel@raab.koeln"
+IMAP_PORT = 143
+IMAP_USER = "newsletter@raab.koeln"
 IMAP_PASS = os.environ["NETCOLOGNE_PASSWORD"]
 ANTHROPIC_KEY = os.environ["ANTHROPIC_API_KEY"]
 OUTPUT_FILE = "output/daily_brief.html"
