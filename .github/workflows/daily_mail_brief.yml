@@ -13,10 +13,10 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Python einrichten
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -33,14 +33,14 @@ jobs:
         run: echo "DATE=$(date +'%d.%m.%Y')" >> $GITHUB_ENV
 
       - name: HTML-Datei als Artifact speichern
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: daily-brief-${{ github.run_id }}
           path: output/daily_brief.html
           retention-days: 7
 
       - name: Brief per E-Mail senden
-        uses: dawidd6/action-send-mail@v3
+        uses: dawidd6/action-send-mail@v17
         with:
           server_address: mail.netcologne-hosting.de
           server_port: 587
