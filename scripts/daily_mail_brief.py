@@ -7,15 +7,50 @@ import os
 import datetime
 import html
 import re
+from zoneinfo import ZoneInfo
 from bs4 import BeautifulSoup
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+def load_secrets():
+    """Lädt scripts/secrets.env (falls vorhanden) in os.environ, ohne bereits
+    in der Shell gesetzte Variablen zu überschreiben. So funktionieren manueller
+    Aufruf und der launchd-Lauf um 6 Uhr gleichermaßen."""
+    path = os.path.join(SCRIPT_DIR, "secrets.env")
+    if not os.path.exists(path):
+        return
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            os.environ.setdefault(key.strip(), value.strip())
+
+
+def require_env(name):
+    value = os.environ.get(name)
+    if not value:
+        raise SystemExit(
+            f"Fehler: Umgebungsvariable {name} ist nicht gesetzt. "
+            f"Trage sie in {os.path.join(SCRIPT_DIR, 'secrets.env')} ein "
+            f"oder exportiere sie in der Shell."
+        )
+    return value
+
+
+load_secrets()
+
 # ── Konfiguration ──────────────────────────────────────────────
-IMAP_HOST = "imap.netcologne.de"
-IMAP_PORT = 993
-IMAP_USER = "daniel@raab.koeln"
-IMAP_PASS = os.environ["NETCOLOGNE_PASSWORD"]
-ANTHROPIC_KEY = os.environ["ANTHROPIC_API_KEY"]
-OUTPUT_FILE = "output/daily_brief.html"
+IMAP_HOST = "mail.netcologne-hosting.de"
+IMAP_PORT = 143
+IMAP_USER = "newsletter@raab.koeln"
+IMAP_PASS = require_env("NETCOLOGNE_PASSWORD")
+ANTHROPIC_KEY = require_env("ANTHROPIC_API_KEY")
+TZ = ZoneInfo("Europe/Berlin")
+OUTPUT_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "output"))
+OUTPUT_FILE = os.path.join(OUTPUT_DIR, "daily_brief.html")
 HOURS_BACK = 24
 # ──────────────────────────────────────────────────────────────
 
@@ -65,6 +100,22 @@ def extract_body(msg):
     return body.strip()[:4000]
 
 
+_JUNK_LINK = re.compile(
+    r"unsubscribe|abmelden|abbestellen|opt-?out|"
+    r"im browser|view (this )?(email )?in.*browser|browser ansehen|webversion|"
+    r"datenschutz|privacy|impressum",
+    re.IGNORECASE,
+)
+
+
+def _is_junk_link(text, href):
+    if _JUNK_LINK.search(text):
+        return True
+    if href.lower().rsplit("?", 1)[0].endswith((".gif", ".png", ".jpg", ".jpeg")):
+        return True
+    return False
+
+
 def extract_links(msg):
     links = []
     if msg.is_multipart():
@@ -76,7 +127,12 @@ def extract_links(msg):
                 for a in soup.find_all("a", href=True):
                     href = a["href"]
                     text = a.get_text(strip=True)
-                    if href.startswith("http") and text and len(text) > 3:
+                    if (
+                        href.startswith("http")
+                        and text
+                        and len(text) > 3
+                        and not _is_junk_link(text, href)
+                    ):
                         links.append((text, href))
     seen = set()
     unique = []
@@ -88,16 +144,20 @@ def extract_links(msg):
 
 
 def fetch_recent_emails():
-    print(f"Verbinde mit {IMAP_HOST}...")
-    mail = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT)
+    now = datetime.datetime.now(TZ)
+    cutoff = now - datetime.timedelta(hours=HOURS_BACK)
+
+    print(f"Verbinde mit {IMAP_HOST} als {IMAP_USER}...")
+    mail = imaplib.IMAP4(IMAP_HOST, IMAP_PORT)
+    mail.starttls()
     mail.login(IMAP_USER, IMAP_PASS)
     mail.select("INBOX")
 
-    since = (datetime.datetime.now() - datetime.timedelta(hours=HOURS_BACK)).strftime("%d-%b-%Y")
+    # IMAP SINCE filtert nur datumsgenau. Wir setzen einen Tag früher an und
+    # filtern unten stundengenau gegen cutoff nach.
+    since = (cutoff - datetime.timedelta(days=1)).strftime("%d-%b-%Y")
     _, data = mail.search(None, f'(SINCE "{since}")')
-
     mail_ids = data[0].split()
-    print(f"{len(mail_ids)} Mails der letzten 24h gefunden.")
 
     emails = []
     for mid in mail_ids:
@@ -105,13 +165,21 @@ def fetch_recent_emails():
         raw = msg_data[0][1]
         msg = email.message_from_bytes(raw)
 
-        subject = decode_str(msg.get("Subject", "(kein Betreff)"))
-        sender = decode_str(msg.get("From", ""))
         date_str = msg.get("Date", "")
         try:
-            date = parsedate_to_datetime(date_str).strftime("%d.%m.%Y %H:%M")
+            msg_dt = parsedate_to_datetime(date_str)
+            if msg_dt.tzinfo is None:
+                msg_dt = msg_dt.replace(tzinfo=TZ)
         except Exception:
-            date = date_str
+            msg_dt = None
+
+        # Stundengenaue 24h-Grenze (Mails ohne lesbares Datum behalten wir).
+        if msg_dt is not None and msg_dt < cutoff:
+            continue
+
+        subject = decode_str(msg.get("Subject", "(kein Betreff)"))
+        sender = decode_str(msg.get("From", ""))
+        date = msg_dt.astimezone(TZ).strftime("%d.%m.%Y %H:%M") if msg_dt else date_str
 
         body = extract_body(msg)
         links = extract_links(msg)
@@ -122,10 +190,15 @@ def fetch_recent_emails():
             "date": date,
             "body": body,
             "links": links,
+            "sort_dt": msg_dt,
         })
 
     mail.logout()
-    return list(reversed(emails))
+
+    # Chronologisch (älteste zuerst), robust gegen fehlende Datumsangaben.
+    emails.sort(key=lambda e: e["sort_dt"] or cutoff)
+    print(f"{len(emails)} Mails der letzten {HOURS_BACK}h gefunden.")
+    return emails
 
 
 def summarize_email(client, subject, sender, body):
@@ -143,7 +216,8 @@ def summarize_email(client, subject, sender, body):
         ],
         messages=[{"role": "user", "content": user_content}],
     )
-    return message.content[0].text.strip()
+    text_parts = [block.text for block in message.content if block.type == "text"]
+    return "\n".join(text_parts).strip()
 
 
 def build_html(emails_with_summaries, generated_at):
@@ -286,7 +360,7 @@ def build_html(emails_with_summaries, generated_at):
 
   {items_html if items_html else '<p style="color:#9a9080;text-align:center;padding:40px 0;">Keine neuen E-Mails in den letzten 24 Stunden.</p>'}
 
-  <footer>Erstellt mit Claude API &nbsp;·&nbsp; daniel@raab.koeln</footer>
+  <footer>Erstellt mit Claude API &nbsp;·&nbsp; newsletter@raab.koeln</footer>
 </body>
 </html>"""
 
@@ -302,13 +376,17 @@ def main():
     emails_with_summaries = []
     for i, e in enumerate(emails, 1):
         print(f"[{i}/{len(emails)}] Zusammenfassung: {e['subject'][:60]}...")
-        summary = summarize_email(client, e["subject"], e["sender"], e["body"])
+        try:
+            summary = summarize_email(client, e["subject"], e["sender"], e["body"])
+        except Exception as exc:
+            print(f"  ! Zusammenfassung fehlgeschlagen: {exc}")
+            summary = "- (Zusammenfassung fehlgeschlagen)"
         emails_with_summaries.append({**e, "summary": summary})
 
-    generated_at = datetime.datetime.now().strftime("%d.%m.%Y %H:%M")
+    generated_at = datetime.datetime.now(TZ).strftime("%d.%m.%Y %H:%M")
     html_content = build_html(emails_with_summaries, generated_at)
 
-    os.makedirs("output", exist_ok=True)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(html_content)
 
