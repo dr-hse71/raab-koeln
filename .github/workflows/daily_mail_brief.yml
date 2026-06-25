@@ -1,11 +1,14 @@
 name: Daily Mail Brief
 
 on:
-  schedule:
-    # Täglich um 04:00 UTC = 06:00 Uhr MESZ (Sommer) / 05:00 Uhr MEZ (Winter).
-    # GitHub-Cron läuft immer in UTC und kennt keine Sommerzeitumstellung.
-    - cron: "0 4 * * *"
-  workflow_dispatch:  # Manuell auslösbar über GitHub UI
+  # Auslösung erfolgt punktlich um 06:00 Europe/Berlin durch einen externen
+  # Cron-Dienst (cron-job.org) via workflow_dispatch-API. Der GitHub-eigene
+  # schedule-Cron ist bewusst deaktiviert, weil er bei Last 4–7 h verspätet
+  # feuert (siehe Obsidian-Notiz "Daily Mail Brief", Abschnitt 6.3).
+  # Zum Reaktivieren als Fallback einfach den schedule-Block einkommentieren:
+  # schedule:
+  #   - cron: "0 4 * * *"   # 04:00 UTC = 06:00 MESZ / 05:00 MEZ
+  workflow_dispatch:  # extern (cron-job.org) + manuell über GitHub UI
 
 jobs:
   generate-brief:
