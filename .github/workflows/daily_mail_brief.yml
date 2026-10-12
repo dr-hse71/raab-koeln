@@ -35,14 +35,31 @@ jobs:
       - name: Datum setzen
         run: echo "DATE=$(date +'%d.%m.%Y')" >> $GITHUB_ENV
 
-      - name: HTML-Datei als Artifact speichern
+      - name: HTML-Dateien als Artifact speichern
+        if: hashFiles('output/*.html') != ''
         uses: actions/upload-artifact@v7
         with:
           name: daily-brief-${{ github.run_id }}
-          path: output/daily_brief.html
+          path: output/*.html
           retention-days: 7
 
+      # Die Versandschritte laufen nur, wenn das Skript die Datei erzeugt hat
+      # (an Tagen ohne neue Mails entsteht keine).
+      - name: Marktbericht per E-Mail senden
+        if: hashFiles('output/market_report.html') != ''
+        uses: dawidd6/action-send-mail@v17
+        with:
+          server_address: mail.netcologne-hosting.de
+          server_port: 587
+          username: newsletter@raab.koeln
+          password: ${{ secrets.NETCOLOGNE_PASSWORD }}
+          subject: "Marktbericht – ${{ env.DATE }}"
+          to: daniel@raab.koeln
+          from: newsletter@raab.koeln
+          html_body: file://output/market_report.html
+
       - name: Brief per E-Mail senden
+        if: hashFiles('output/daily_brief.html') != ''
         uses: dawidd6/action-send-mail@v17
         with:
           server_address: mail.netcologne-hosting.de
